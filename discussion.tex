@@ -1,0 +1,282 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Related work}
+\label{sec:related}
+
+In this work we presented a stateful contract implementing asynchronous message-passing
+in the EUTxO ledger. Message-passing is the backbone of distributed computing \cite{distributed}
+\cite{design}. The $\pi$-calculus process calculus has been developed to formalize
+processes and message-passing between them in a distributed computing scenario
+\cite{picalc}. We conjecture that it may be possible to apply this formalism to
+message-passing between structured contracts, considering them as processes
+under certain circumstances. However, this is the subject of future work.
+
+The UTxO ledger design (first introduced as the BitCoin ledger \cite{bitcoin}),
+and EUTxO ledger implementations \cite{algorand} \cite{ergo} \cite{nervos} are themselves
+message-passing schemes, wherein a transaction is a message to a script.
+Our scheme reinterprets messages in a way that allows them to have a single verified
+sender output, and a receiver that is also an output. The content of the message
+is constrained as well. The contract $\MSGS$
+can be viewed as a kind of linear sub-ledger within $\LEDGER$, one that may be
+used as a tool in specification and verification of properties, such as temporal
+properties of communicating contracts, or ones needed for the applications we presented, e.g.
+Lemmas \ref{lem:io-pairs} \ref{lem:msgs-ok}.
+
+Some account-based ledger designs \cite{ethereum} \cite{tezos} \cite{zilliqa}
+use on message-passing as the default way of communication between contracts.
+However, in all three cases, the message-passing is synchronous, so that both
+the sender and receiver accounts are updated as part of processing a single transaction.
+Our goal of separating communication from computation for stateful contracts
+on the EUTxO ledger is inspired by the Scilla \cite{scilla} programming language.
+Even though it was developed for the account-based ledger model, the communicating
+automata structure it uses to model contracts could potentially be used to
+describe message-passing structured contracts as well.
+
+CoSplit, presented in \cite{sharding}, is a static analysis tool for implementing
+\emph{sharding} in an account-based ledger model. Sharding is the practice of
+separating contract state into smaller
+fragments that can be affected by commuting operations, usually for the purposes of
+increasing parallelism and scalability. Our message-passing contract is
+distributed, so that each message is contained in a distinct output.
+There is no specially-marked output containing the
+consolidated message state, whose output reference a transaction must
+include every time \emph{any} message is produced or consumed.
+So, our design does not put superfluous constraints on the order in which multiple
+transactions producing and consuming
+messages can be applied to the EUTxO ledger. It does not require further state sharding.
+
+A version of asynchronous message-passing is implemented in the ERC-20 Ethereum contract for
+fungible tokens \cite{ethereum-docs}. To transfer an amount of tokens from a sender to a receiver,
+the total amount being transferred must first be sent and recorded in an intermediate
+data structure, then received and withdrawn from the data structure. The total
+amount does not have to be withdrawn in its entirety, which is different from
+our design, where a message can only be consumed in full. The ERC-20 design is
+also primarily for asset transfers, whereas ours can be used to authenticate
+script computation outputs as well. We also note that in an
+account-based ledger, transactions interacting with the same stateful
+contract like ERC-20 can usually be reordered. However, implementing message-passing
+via a centralized data-storage contract in an EUTxO ledger would significantly
+reduce the possibility of reordering message-passing transactions.
+
+Formalization of blockchain and ledger functionality forms a foundation for
+rigorous reasoning about smart contracts security, discussed in the
+detailed overview \cite{leveragingfm}. Mathematical models of
+EUTxO and UTxO ledgers and smart contracts therein, including ours, often specify
+a simplified version of actual implementations
+\cite{eutxoma} \cite{blockalg} \cite{nester} \cite{algorandformal} \cite{bitcoinformal}.
+Languages for writing verifiable contracts such as \cite{bitml} \cite{scilla}
+make programming on a blockchain ledger more amenable to formal verification.
+In this work we continue this tradition of formalizing ledgers, smart contracts, and communication
+models between ledger contracts, and formally studying their vulnerabilities. In particular,
+this work builds on the work
+done in \cite{structured} \cite{eutxoma}
+on formalizing stateful program models and their security properties.
+
+\section{Future work}
+\label{sec:future}
+
+The scheme we presented in Figure \ref{fig:messages-rule} is such that
+the outputs that must be spent in order to
+consume a given message are fully specified
+(via the $\fun{msgTo}$ field of the message), including their
+scripts, values, and datums. In future work, this constraint
+could be relaxed for a more permissive system design. For example, the $\fun{msgTo}$
+field can be replaced by a constraint on some part of the output. For example,
+the recipient output must contain a particular NFT token in its value.
+Making it an option to not even specify the receiver allows the message-passing
+system to also function as a kind of broadcast system for authenticated data.
+Messages broadcast in this way can serve as untrusted oracles.
+
+A \emph{time of expiry} can be added to the message structure and used to specify a time
+after which a message can be consumed under constraints other than the
+spending of the intended recipient output. This would allow structured contracts
+to retract any assets sent via a message but not received by a set time.
+Changing the type of the message-passing redeemer from a list of messages
+to \emph{either} a list of messages \emph{or} some other data can also
+make $\MSGS$ more versatile. It may be useful in
+enabling a given script to participate in either computation or communication
+as a result of applying a transaction, depending on the redeemer specified.
+
+In this work, we did not specify trace-based properties of $\LEDGER$
+or any structured contract $\STRUC$. This topic, in general, is the subject of future
+work. Of particular interest are structured contracts that can be guaranteed
+to take a step without the need for executing "external" scripts, i.e. ones that
+specify permissions for updating parts of the ledger which not reflected in the
+contract state representation. It is often not realistic for a contract to
+successfully take a step without \emph{any} external contracts validating.
+For example, paying into a contract is likely to require an "external" output to be
+spent within the same transaction in order to cover the payment. However, it
+seems feasible to limit a structured contract's dependencies to message-passing only.
+Formalizing and proving properties about this subclass of contracts in the future is
+of interest.
+
+The formalization of the double satisfaction problem we presented does not address
+the possibility that a script may contain a constraint preventing any other
+scripts from executing as part of carrying transaction validation. While this
+seems like an obvious way to prevent the problem, we note that "no other
+scripts can run during validation of this transaction" is a constraint
+on the transaction that is in fact itself vulnerable to double satisfaction.
+It is incidental that no other scripts that may benefit from the satisfaction of
+this constraint.
+This is a special case we can address in the future, however, as mentioned
+earlier, it is not likely that a sensible contract can be guaranteed to progress
+under the condition that the transaction runs no "external" scripts.
+
+In the future, we intend to mechanize this contract and its applications in Agda,
+using the EUTxO ledger and structured contracts model \cite{agda-structured},
+as well as in the more realistic Agda-mechanized ledger model \cite{agdaspec} of
+the Cardano ledger \cite{cardano}, which is currently in development.
+
+\subsection{Conclusion}
+\label{sec:conclusion}
+
+As discussed above, some security properties of
+stateful smart contracts in the EUTxO
+ledger model have been formalized in existing work.
+However, in such models, communication between contracts was not a focus, and was
+incidentally treated the same as any other script dependency. In this work, we focus on
+formalizing communication of data and assets among
+scripts as well as the stateful contracts they implement. We encode communication
+as a special kind of dependency of a script (or structured contract) on a distributed
+stateful
+contract keeping track of all unconsumed messages. Moreover, the contract
+we present is specified in the
+same small-steps semantic framework as the ledger itself. This allows us to reason about
+it separately from other dependencies and from script computation, making it more
+amenable to formal reasoning.
+
+As an example of such reasoning, we present
+two usecases. The first usecase is a variation on memoization,
+wherein message tokens serve as proof
+artefacts of successful script computations. The second usecase formalizes
+the idea of a script communicating via message-passing, and defines when a message
+constitutes a "payout". We go on to formalize the pervasive double satisfaction
+problem as a property of a labelled transition system, and demonstrate
+the use of message-passing to address this vulnerability in certain cases.
+
+
+
+% specifying and reasoning about behaviour of
+% stateful programs running on a EUTxO ledger, which we call the structured contract
+% formalism. Our formalism defines a robust
+% way to relate stateless predicate scripts executed at the ledger level to the
+% corresponding corresponding executions of a specific stateful program.
+% We used the well-established concept of a subsystem
+% to define this relation, and a small-step semantics style already in use in
+% existing systems (i.e. Cardano) for the specification of the ledger and contracts.
+% This work presents a broadly applicable and principled
+% way of reasoning about stateful programs on the EUTxO ledger.
+%
+% This paper lays the groundwork for treating ledger-implemented programs as
+% formal subsystems of the ledger. This is done on a level that is very specific
+% to the details of the EUTxO ledger. In the future, we aim to generalize our
+% research to be applicable to other kinds of ledger transition systems.
+% We would also like to better align our findings with existing concepts in the
+% theory of simulation, concurrency, and distributed computation, in order to
+% apply the full gamut of results in those areas for studying stateful
+% programs on the ledger.
+%
+% Another goal for future work is to
+% find a way to use the findings presented here to verify existing contracts.
+% This may be done by first constructing the ledger and transaction representation
+% projection functions, then building a state transition specification induced by
+% $\LEDGER$ for those projections. Properties of the resulting system can then
+% be studied.
+%
+% A full mechanization in Agda of the results and definitions in this work is currently
+% under way, as it is a natural next step. We also intend to build a mechanization of this work
+% integrated with the Agda mechanization of a more sophisticated and realistic
+% ledger, the Cardano ledger. The Cardano
+% ledger is in a unique position to be amenable to the structured contract framework
+% approach to verification due to the existence of a mechanized small-steps specification
+% in Agda of the entire ledger (currently in development) \cite{agdaspec}.
+% Agda automation of proof generation for the subsystem proof obligations, such
+% as using an SMT-solver, will be a natural progression of the project.
+%
+%
+% Code errors and design flaws have been very costly for users
+% since the introduction of smart contracts on the Ethereum platform \cite{survey}.
+% Among the most high-profile and costly being the DAO hack \cite{DAO},
+% and more recently, a faulty NFT contract \cite{nftbug}. Formal methods are being
+% used to find, prevent, and mitigate vulnerabilities on different ledger models, and via different
+% approaches \cite{formal}.
+%
+%
+%
+% Scilla \cite{scilla} is a intermediate-level language for writing smart contracts as state
+% machines on an account-based ledger model.
+% The Scilla authors have used Coq to reason about contracts written in Scilla, proving a variety of
+% temporal properties such as safety, liveness, and others. The goal of this work,
+% however, not to study stateful program behaviour, but rather, it is to formalize
+% the notion of correct implementations
+% of stateful programs on a platform where programs are inherently stateless. The purpose of the
+% properties we discuss is to exemplify how reasoning about a
+% specification trace guarantees the conclusions to hold for any
+% ledger representation inducing a correct its implementation. A full treatment
+% of lifting safety and liveness properties from specification to implementation
+% is the subject of future work. Additionally, we believe that the subsystem approach
+% we present in this work may be used to model on-chain interactions between
+% Scilla contracts.
+%
+% The Bitcoin Modelling Language (BitML) \cite{bitml} allows the definition of smart
+% contracts running on Bitcoin by means of a restricted class of state machines.
+% The BitML state machines are less expressive than the class of specifications
+% considered in our model, since we assume that our stateless scripts are written
+% in a Turing-complete language. However, the goal of this language is similar to
+% ours - to guarantee that the behaviour of certain state machines (in the case of BitML, ones defined
+% using this language) if in accordance with the changes made by valid transactions, i.e. soundness.
+% The difference is that we present a framework in which one can define a state
+% transition system with an implementation (both using a Turing-complete language),
+% then prove soundness to achieve a "correct" implementation, whereas BitML allows users to
+% define a sound state machine from smaller class, then compile it to a \emph{specific}
+% implementation. With BitML, LTL formulas can be automatically
+% verified using a dedicated model checker. In the future, we plan to add support for LTL formulas in
+% our framework.
+%
+% VeriSolid \cite{verisolid} synthesises Solidity smart contracts from a state machine specification, and
+% verifies temporal properties of the state machine using CTL. The underlying
+% ledger model for VeriSolid is, however, an account-based model, rather than the
+% EUTxO model we work with. Moreover, in contrast
+% to the VeriSolid approach, our approach
+% relies on the contract author to themselves to synthesize an implementation
+% that meets the requirements specific to the contract being built, and then
+% provides a proof obligation to show that implementation is correct. This allows
+% for more flexibility in the implementation, as well as in the logic
+% used in checking properties. Here, again, it may be of interest to use an approach
+% similar to the structured contracts framework to model interactions between
+% structured contracts.
+%
+%
+% Our work allows users to compose contracts whose state is distributed across multiple
+% UTxOs and tokens on the ledger, and provides a way to formally guarantee that the update of the
+% full aggregated state is in accordance with the update of its ledger representation.
+% This application of structured contracts serves a similar purpose as for the EUTxO
+% ledger as sharding does for an account-based one, as it can be used to increase
+% parallelism and scalability. We note that the UTxO model is a natural fit for
+% such state separation, since one of the benefits of such a ledger is that
+% all operations either commute or fail \cite{parallelism}. Therefore, any
+% UTxO state representation,
+% with any (correct) implementation, will afford the relevant properties for a given
+% distributed contract.
+%
+% On the EUTxO ledger, the constraint-emitting machine design pattern \cite{eutxoma} makes
+% a formal correctness guarantee
+% similar to the proof obligation we require as part of the definition of smart contracts.
+% However, it is limited to a ledger representation of contract state that is
+% strictly the datum and value of a
+% single UTxO entry, expressing dependencies on other scripts via a limited set of
+% possible constraints on
+% transactions. Our model allows the contract state to be computed from multiple
+% UTxO entries and tokens aggregated across the ledger state, with its evolution
+% coordinated by multiple different scripts. Another notable difference is that
+% the ledger model presented in \cite{eutxoma} is a list of UTxO-stype transactions,
+% rather than the UTxO set itself, with a unique initial state (the empty ledger).
+% Here, we are not able to review and reason about the full transaction history,
+% as is the case for existing realistic ledgers.
+
+
+% Another
+% aspirational aspect of automation of this project is that of the translation
+% from contract implementations in Agda to Plutus, the language used in the
+% between Agda contract implementations and Plutus contracts

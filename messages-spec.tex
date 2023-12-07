@@ -1,0 +1,195 @@
+\section{Message-passing specification}
+\label{sec:messages}
+
+Conceptually, a message is data associated
+with a specific sender and recipient, that has been sent from the sender
+to the recipient \cite{distributed}.
+In our design, a message is a data structure of type $\Msg$ encoded on
+the ledger, which also includes a sender, receiver, and some data.
+The content of $m \in \Msg$ is encoded as the $\TokenName$ of an
+NFT with the minting policy $\msgsTT$. Such an NFT can only be
+minted and burned under the certain conditions on the carrying transaction.
+A message consists of the following fields, see Figure \ref{fig:msgs-types}
+
+\begin{itemize}
+  \item[(i)] an output reference $\fun{inUTxO} : \OutputRef$ : must be
+  spent when the message token is minted ;
+  \item[(ii)] an index $\fun{msgIx} : \Ix$ : used to uniquely identify a message
+  whenever multiple messages are produced in association with spending a single UTxO entry ;
+  \item[(iii)] an output $\fun{msgTo} : \Output$ : an output that must be spent
+  to validate the consumption of the message \emph{by that recipient} (such an
+  output may not be unique) ;
+  \item[(iv)] an output $\fun{msgFrom} : \Output$ : an output that must be spent
+  to validate production of the message, the entry $\fun{inUTxO} \mapsto \fun{msgFrom}$
+  must be in the UTxO set
+  at the time the message is minted, and must be spent to validate the
+  production of the message \emph{by that sender} ;
+  \item[(v)] a value $\fun{msgValue}$ : the assets being sent from the
+  sender output to the recipient via this message. When a message is minted
+  and placed in an output, this output must \emph{also} contain at least this
+  amount of assets ;
+  \item[(vi)] data $\fun{msgData}$ : the data being sent via this message, generated
+  using known inputs to the sender script ;
+\end{itemize}
+
+Each message must have a unique identifier to keep track of it.
+Here, we use the approach to ensuring NFT uniqueness by recording in each message
+token a particular output reference $\fun{inUTxO}$ spent from the UTxO by the minting transaction,
+similar to the thread token mechanism in
+\cite{eutxoma} \cite{structured}. A single script may produce multiple messages
+in the same transaction, associated with a single output reference.
+So, the identifying output reference $\fun{inUTxO}$ together with its \emph{index} $\fun{msgIx}$
+uniquely identifies the message.
+
+Sending a list of messages is done by submitting a transaction that (i) mints the
+NFTs encoding each of the messages, and (ii) executes the script of the sender
+output with the redeemer containing the list of sent messages.
+% Duplication is checked (and disallowed) across all lists of messages being sent in a transaction.
+For an output to receive a set of sent messages, a transaction must spend the outputs containing the
+messages, and burn the message tokens. It must also spend the receiver output
+supplied with a redeemer containing the message list.
+% Up to the receiver contract code to decide what to do with the value in the
+% message, and up to the sender to decide where that value comes from
+
+The $\MSGS$ transition system specifies the rules for updating a set of
+messages with a given transaction by adding and removing messages to/from
+the message state.
+It has a state type $\State \leteq \powerset{\Msg}$, and
+an input type $\Input \leteq \Tx$. The projection function
+$\pi_{\Msg}$ returns, for a given $\var{utxo}$, the messages encoded by
+the message tokens that exist in the outputs of the UTxO set. It
+returns $\emptytype$ when one or more messages have been duplicated or incorrectly
+generated in the $\var{utxo}$.
+
+The function $\msgTkn$ constructs a message token out of a given message.
+See Figure \ref{fig:msgs-aux} for details.
+Figure \ref{fig:messages-rule} gives the transition rule for the $\MSGS$
+system. The functions $\fun{fromData}, \fun{toData}$, whose types are
+given in \ref{fig:msg-to}, encode and decode data at lists of messages to be
+sent and received.
+
+% \todopv{some of the constraints are maybe overkill, and are implied by other
+% constraints or ledger updates}
+
+\begin{figure}[htb]
+  \begin{equation}
+    \inference[Process]
+    {
+    \text{\textcolor{gray}{-- (1) compute messages being sent and received by getting all redeemers}} \\
+    \text{\textcolor{gray}{which decode as pairs of an instruction and message data}}\\
+    \var{sndMsgs} \leteq [~ (\var{msg},~i)~\mid~i\leftarrow~(\fun{toList}~(\inputs~\var{tx})),
+    ~(\var{sr},~\var{msg})~ \leftarrow~ \fun{fromData}~(\redeemer~i),~\var{sr}=\send~] \\
+    \var{rcvMsgs} \leteq [~ (\var{msg},~i)~\mid~i\leftarrow~(\fun{toList}~(\inputs~\var{tx})),
+    ~(\var{sr},~\var{msg})~\leftarrow~\fun{fromData}~(\redeemer~i),~\var{sr}=\receive~]
+    \\~\\
+    \text{\textcolor{gray}{-- (2) check that no messages new are duplicates}}\\
+    \fun{noDups}~(\fun{map}~\fun{getMsgRef}~\var{sndMsgs}~++~\fun{map}~\fun{getMsgRef}~\var{rcvMsgs}) \\
+    \fun{noDups}~(\fun{map}~\fun{getMsgRef}~\var{sndMsgs}~++~\fun{map}~\fun{inUTxO}~\var{msgs})
+    \\~\\
+    \text{\textcolor{gray}{-- (3) compute what new message-containing outputs should be created}} \\
+    \text{\textcolor{gray}{based on what message tokens are in tx outputs}}\\
+    \var{newOuts}~\leteq ~\{~(o,~\var{msg})~\mid~o~\in~\outputs~\var{tx},~
+    \msgTkn~\var{msg}~\subseteq~\val~o~\}
+    \\~\\
+    \text{\textcolor{gray}{-- (4) check that all the messages are correctly defined : }}\\
+    \text{\textcolor{gray}{correct sender, outputref is spent, one message per output,}}\\
+    \text{\textcolor{gray}{output with message has correct validator and suffient value, sender has correct redeemer}}\\ %
+    \forall~(o,~\var{msg})~\in~\var{newOuts},~(\var{msg},~(\var{inf}, \fun{msgFrom}~\var{msg}, \wcard))~\in~\var{sndMsgs} \\
+    \wedge~\fun{inUTxO}~\var{msg}~=~\var{inf}~\wedge~\{~t~ \subseteq~\val~o~\mid~\dom~t~=~\{\msgsTT\}~\} = \msgTkn~\var{msg} \\
+    \wedge~\validator~o~=~\msgsVal ~\wedge~\val~o~\geq~\fun{msgValue}~\var{msg}
+    \\~\\
+    \text{\textcolor{gray}{-- (5) compute what message-outputs should be spent}} \\
+    \text{\textcolor{gray}{based on what message tokens are in tx inputs}}\\
+    \var{usedInputs} \leteq \{~ (i,~\var{msg})~\mid~
+    i~ \in~ \inputs~\var{tx},~\msgTkn~\var{msg}~\subseteq~\val~(\fun{output}~i) ~\} \\~\\
+    \text{\textcolor{gray}{-- (6) check that all the messages are correctly consumed : }}\\
+    \text{\textcolor{gray}{the receiver is correct, and has correct redeemer, and message exists}}\\
+    \forall~(i,~\var{msg})~\in~\var{usedInputs},~(\var{msg},~(\wcard, \fun{msgTo}~\var{msg}, \wcard))~\in~\var{rcvMsgs}~\wedge~\var{msg} \in \var{msgs}\\
+    \\~\\
+    \text{\textcolor{gray}{-- (7) check minting and burning of message tokens : }}\\
+    \Sigma_{(\var{msg},~\wcard)~\in~\var{sndMsgs}}~\msgTkn~\var{msg} ~~+~~
+    \Sigma_{(\var{msg},~\wcard)~\in~\var{rcvMsgs}}~(-1) ~*~ (\msgTkn~\var{msg}) ~\\
+    ~~~~~~~~~=~ \Sigma_{\msgsTT \mapsto \var{tkns}~\in~\mint~\var{tx}} \msgsTT \mapsto \var{tkns}
+    \\~\\
+    }
+    {
+    \begin{array}{l}
+      \\
+    \end{array}
+      \vdash
+      \left(
+      \begin{array}{r}
+        \var{msgs}
+      \end{array}
+      \right)
+      \trans{msgs}{tx}
+      \left(
+      \begin{array}{r}
+        \varUpdate{(\var{msgs} \setminus (\fun{map}~\fun{fst}~\var{rcvMsgs})) \cup (\fun{map}~\fun{fst}~\var{sndMsgs})}
+      \end{array}
+      \right) \\
+    }
+  \end{equation}
+  \caption{Specification of the $\mathsf{MSGS}$ transition}
+  \label{fig:messages-rule}
+\end{figure}
+
+The contracts $\msgsTT$ and $\msgsVal$, implementing the above specification,
+are given in Figures \ref{fig:msgs-codeTT}
+and \ref{fig:msgs-codeV}. The message minting policy $\msgsTT$ performs all the same
+checks that are in the $\MSGS$ specification. Each message token minted by
+an transaction under policy $\msgsTT$ must be placed
+into a UTxO locked by a special validator, $\msgsVal$.
+The script $\msgsVal$ checks that the message token therein is burned --- the minting
+(i.e. burning) policy ensures the rest of the conditions specified in $\MSGS$.
+The redeemer type for the validator script $\msgsVal$ is $\{\emptytype\}$.
+See \ref{pf:sim} for the proof of the relation $\sim >$ between $\LEDGER$
+and $\MSGS$ that ensures that the implementation of $\MSGS$ via the $\msgsTT$
+and $\msgsVal$ scripts is according to the $\MSGS$ specification. It uses
+assumption (i) in \ref{sec:assmp}.
+
+% We note that message-passing minting policy and validator dependencies
+% require that scripts with redeemers that decode to message lists necessarily
+% have corresponding messages being minted and burned.
+
+\paragraph{Extra assumptions. }
+\label{sec:assmp}
+We must make additional assumptions about allowable ledger states and transactions
+in order to prove properties of the behaviour of our $\MSGS$ program.
+Under reasonable assumptions about the initial state of the ledger, the following
+assumptions may not be required, and instead be proved as
+safety properties \cite{liveness} resulting from correct construction of subsequent
+ledger states starting from acceptable initial states. A full treatment of
+traces and properties is outside the scope of this work.
+
+\begin{itemize}
+  \item[(i)] \textbf{Replay protection. }
+  For any $\var{utxo}$ such that $\pi~\var{utxo} \neq \emptytype$,
+
+  \[ \forall ~m, m' \in \pi~\var{utxo}, ~(\fun{msgIx}~m = \fun{msgIx}~m')~~\Rightarrow~~\fun{fst}~(\fun{inUTxO}~m) \neq \fun{fst}~(\fun{inUTxO}~m') \]
+
+  This states that if two message tokens on the ledger $\var{utxo}$ have the
+  same index, they could not have been generated as a result of spending the
+  same UTxO entry. This assumption required in
+  order to guarantee non-duplication of message tokens in the UTxO set.
+  Under reasonable assumptions about the initial ledger state, it is a consequence
+  of replay protection together with non-duplication of messages within a single transaction,
+  which is guaranteed by first conjunct of (2) in the rules \ref{fig:messages-rule}.
+  Replay protection states that the same transaction cannot be applied twice within the same trace.
+  In the EUTxO model, as demonstrated in \cite{eutxoma} \cite{agdaspeceutxo},
+  replay protection is a safety property satisfied by any
+  ledger trace starting from a state satisfying certain properties.
+
+  \item[(ii)] \textbf{Script validation. }
+  Given any $\var{utxo}$, $(\var{tx}, \wcard) \mapsto o~\in~\var{utxo}$,
+
+  \[ \applyScript{\msgsVal}~(d,~r,~(\var{tx},~\var{i})) \]
+
+  where $\redeemer~i = r, \datum~(\fun{output}~i)~=~d$.
+  This states that the scripts in all the outputs of all transactions recorded on
+  a given ledger state must have validated with their corresponding datum and
+  redeemer inputs. We will require this assumption when demonstrating the
+  applications of message-passing in order to treat existing messages as
+  generated in conjunction with the validation of a sender output.
+
+\end{itemize}

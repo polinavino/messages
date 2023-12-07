@@ -1,0 +1,243 @@
+\section{Double Satisfaction}
+\label{sec:doublesat}
+
+In the EUTxO model, multiple scripts can be executed as part of the validation and
+application of the transaction which causes them to be run, i.e. the \emph{carrying}
+transaction. Each script is run when the unique action it is associated with
+is performed by the carrying transaction, such as spending a particular UTxO or
+minting tokens under a specific
+policy. Scripts contain constraints on the data of the carrying transaction,
+and \emph{multiple scripts} may place the \emph{same constraint} on the data
+of a given transaction. The issue with certain undesirable instances of this situation
+is called the \emph{double satisfaction problem} (DSP).
+
+Consider the following examples of constraints a structured contract with
+$\Input \leteq \Tx$ may place on a transaction $\var{tx}$ :
+
+\begin{itemize}
+  \label{examples}
+
+  \item[(i)] \textbf{Authorization tokens : } the transaction must contain in
+  its inputs a special token, the ability to spend which constitutes proof that
+  a particular contract state update is authorized
+
+  \item[(ii)] \textbf{Payouts : } to perform a specified state update,
+  the transaction must make a payout of value
+  $v$ to address $a$, i.e. contain an output with value $v$ and address $a$
+  \newline
+\end{itemize}
+
+The ability of a transaction author to present an authorization token, as in (i),
+is treated as proof that some action the transaction performs is authorized.
+It may be that the same transaction makes contract state updates to
+other contracts, whose implementations also require the
+check that the specific authorization token was presented. There is no problem
+with presenting a single authorization token within a transaction updating the
+state of multiple distinct contracts, each of which
+requires the presentation of this token. This is not an
+example of problematic double satisfaction,
+since the intended meaning of this constraint is upheld by its implementation.
+
+When two structured contract implementations both place the constraint (ii) on a transaction,
+it may be satisfied by a single transaction output $(a, v, \wcard)$. One may
+speculate that the authors of each of the
+scripts with constraint (ii) intended for the output $(a, v, \wcard)$ to be
+somehow associated with the step of the particular contract they care about.
+This means that two distinct
+outputs would be required, each associated with one contract. In this case,
+the double satisfaction is problematic, and $a$ receives less total assets than intended.
+
+Because this issue is one that applies to all scripts
+that require transactions to make payouts, it is a widely encountered
+issue with EUTxO programming.
+It has been discussed in Plutus documentation \cite{plutus-docs}, as well as in the context of
+contract audits \cite{marlowe-audit-tech} \cite{ds-blog} \cite{marloweaudit}, but not formally analyzed.
+In this work, we discuss the DSP in the context of structured contracts,
+and argue that expressing payouts as messages is a way to make
+payments that is resilient to DS.
+
+The examples we presented show that the distinction between DS that is problematic
+and not problematic is strictly in the \emph{intent of the script author}.
+For this reason, we can only judge whether a constraint is \emph{vulnerable}
+to double satisfaction, i.e. it is not associated exclusively with a particular
+structured contract.
+Let us assume that all systems discussed in this section are deterministic,
+and define a function that returns all pairs of states in valid transitions
+of a contract $\STRUC$ :
+\[ \fun{s}~\STRUC = \{~ (s, s')~\mid~\exists~i,~(\emptytype, s, i, s') \in \STRUC~\} \]
+
+We now define what a constraint is, as well as double satisfaction (DS).
+
+\paragraph{Definition (transition constraint). }
+A \emph{constraint} of a transition system $\STRUC$ is a subset
+\[ \fun{C} \subseteq \emptytypeT \times \State \times \Input \times \State \]
+
+such that $\STRUC \subseteq \fun{C}$. A constraint is \emph{strict} when
+$\STRUC \subsetneq \fun{C}$.
+
+\paragraph{Definition (double satisfaction). }
+\label{def:ds}
+A system $\STRUC$ is \emph{vulnerable to double satisfaction}
+with respect to a strict constraint $\fun{C}$
+whenever there exists another contract $\STRUC'$, with $\STRUC \subseteq \STRUC'$
+and $\fun{s}~\STRUC = \fun{s}~\STRUC'$,
+
+such that $\STRUC \subseteq \STRUC' \cap \fun{C} \subsetneq \STRUC'$.
+
+\paragraph{Discussion. }
+Definition \ref{def:ds} states that a double satisfaction-vulnerable constraint
+limits the set of allowable inputs for a given pair of states with a transition between them.
+This is the kind of constraint that can appear in another contract run within the same
+transaction, intuitively making them susceptible to DS. A constraint on the pairs of
+states that have a transition between them, on the other hand, can only be satisfied by another
+contract if the two contracts \emph{share state}. A constraint on shared contract
+state and the update thereof does not appear to be what is meant by
+a single constraint being satisfied by multiple contracts. It is, rather, a
+different situation, better described in terms of nested or overlapping
+contracts, and is the subject of future work.
+
+Our definition of DS rules out constraints that can never be satisfied, and therefore all
+constraints that eliminate
+certain state transitions entirely. Requiring certain payouts
+to be in transaction outputs, but not recording them in the contract state, is
+vulnerable to double satisfaction. We give an example to illustrate
+the concept of DS vulnerability.
+
+\paragraph{Example ($\TOGGLE$ with extra constraint). }
+\label{ex:toggle}
+Consider the following specification of a $\TOGGLE$ contract, with $\State = \B$,
+and $\Input = (\toggle \cup \{\emptytype\}) \times \Interval{\Tick}$.
+
+\begin{equation}
+  \inference[DoNothing]
+  { \\
+  }
+  {
+  \begin{array}{l}
+    \\
+  \end{array}
+    \vdash
+    \left(
+    \begin{array}{r}
+      x
+    \end{array}
+    \right)
+    \trans{TOGGLE}{(\emptytype, \wcard)}
+    \left(
+    \begin{array}{r}
+      x
+    \end{array}
+    \right) \\
+  }
+\end{equation}
+\begin{equation}
+  \label{eq:j}
+  \inference[Toggle]
+  {~\\
+  5 \leq k < j \leq 9 \\~\\
+  }
+  {
+  \begin{array}{l}
+    \\
+  \end{array}
+    \vdash
+    \left(
+    \begin{array}{r}
+      x
+    \end{array}
+    \right)
+    \trans{Toggle}{(toggle, [j, k])}
+    \varUpdate{\left(
+    \begin{array}{r}
+      \neg~x
+    \end{array}
+    \right) } \\
+  }
+\end{equation}
+
+Now, let us observe the DS vulnerability that occurs in this contract.
+We define a contract $\STRUC'$ by removing $j \geq 5$ from \ref{eq:j},
+and define the strict constraint
+\[ \fun{C} (\emptytype, \wcard, (t, [j,k]), \wcard) \leteq (t = \toggle) \Rightarrow (5 \leq k < j \leq 9) \]
+
+so, $\STRUC \subsetneq \fun{C}$. The contract $\STRUC'$ has the same set of possible
+transitions as $\STRUC$, which is : $x \mapsto x$
+and $x \mapsto ~\neg~x$, and therefore, $\fun{s}~\STRUC = \fun{s}~\STRUC'$.
+So, by our definitions, $\STRUC = \STRUC' \cap \fun{C} \subsetneq \STRUC'$.
+Therefore, $\STRUC$ is vulnerable to DS with respect to $\fun{C}$. If such a
+vulnerability is deemed problematic by the contract author, then it is likely
+that it is important to them that \emph{no other contracts} execute on-chain in the interval
+$[5, 9]$. This may be difficult to avoid, in practice.
+
+It is possible to define a class of contracts that is never vulnerable to DS constraints,
+and these contracts have an output state for any pair of an input state and an input :
+
+\paragraph{Lemma (DS-free contracts)}
+\label{lem:dsfree}
+
+% \begin{itemize}
+%   \item[(i)]
+  A system $\STRUC$ is not vulnerable to double satisfaction with respect to any
+  constraint whenever for any $(s, i)$, there exists
+  an $s'$ such that $(\emptytype, s, i, s') \in \STRUC$ \newline
+  %
+  % \item[(i)] If system $\STRUC$ is not vulnerable to double satisfaction with respect
+  % to a constraint $\fun{C}$, it is also not vulnerable to DS with respect to
+  % any constraint $\fun{C'} \subseteq \fun{C}$. \newline
+  %
+  % \item[(iii)] Let $\STRUC$ be contract that uses message-passing, and $\STRUC_m$ -
+  % the message-augmented $\STRUC$. Suppose $\fun{getSTRUCmsgs}$ filters the
+  % messages such that $\fun{M}$ is a strict constraint of $\STRUC$, as in \ref{def:usesmp}.
+  % Then $\STRUC$ is not vulnerable to DS with respect to $\fun{M}$.
+% \end{itemize}
+
+We give a proof sketch in \ref{pf:dsfree}.
+
+\paragraph{$\MSGS$ as payouts. }
+
+Payouts may be implemented differently for different structured contracts.
+We gave one naive approach to payouts in (ii) in \ref{examples}. This approach is
+vulnerable to DS, since the constraint requiring a payout to be made is strictly
+on the input transaction, with no record of the payout in the state.
+We now argue that, since making payouts via messages can be expressed as
+a constraint on a pair of message states, rather than on the input transaction,
+this approach to payouts is not vulnerable to DS for a message-enhanced contract.
+
+Let us consider payouts as specified in the definition of payouts via messages,
+given in \ref{def:usesmp}.
+Suppose $(\pi_{\fun{F,c}},~\pi_{\Tx},~\STRUC)$. Let
+ $(\pi_{\fun{F,c}},~\pi_{\Tx},~\STRUC')$ be another structured contract,
+with $\fun{s}~\STRUC = \fun{s}~\STRUC'$, and $\STRUC \subseteq \STRUC'$.
+The two contracts necessarily have the same sets of payout messages for
+transitions between the same pairs of states.
+
+To formalize this reasoning, we define following constraint on the message-enhanced
+contract $\STRUC_{\MSGS}$,
+\begin{align*}
+  \fun{Pays}~(\emptytype, (s, m), \var{tx}, (s' m'))~\leteq~\forall~\STRUC' \supseteq \STRUC,
+  \fun{s}~\STRUC = \fun{s}~\STRUC',
+  \forall (\emptytype, (s, m), \var{tx'}, (s', m')) \in \STRUC', \\
+  ~~~~\fun{getPayouts}_{\STRUC}~(\emptytype, (s, m), \var{tx}, (s', m')) = \fun{getPayouts}_{\STRUC'}~(\emptytype, (s, m), \var{tx'}, (s', m'))
+\end{align*}
+
+This constraint states that given any other (more permissive) contract $\STRUC'$,
+the set of payouts necessary and sufficient for any step of both $\STRUC_{\MSGS}$ and
+$\STRUC'_{\MSGS}$ is fully determined by the change in the corresponding $\MSGS$ state,
+even when the input transactions are distinct.
+By definition, $\fun{getPayouts}_{\STRUC}$ and
+$\fun{getPayouts}_{\STRUC'}$ do not inspect the states $s, s'$ or the
+transactions $\var{tx}, \var{tx'}$ when applied to valid steps in $\STRUC$
+and $\STRUC'$, respectively, see \ref{sec:async}.
+So, we can conclude that the following is trivially true :
+\[ \forall ~\var{step}, \fun{Pays}~\var{step} \]
+
+and therefore, $\STRUC' \cap \fun{Pays} = \STRUC'$. We can conclude that payout
+messages are not affected
+by adding DS-vulnerable constraints of $\STRUC$ to $\STRUC'$.
+This gives us the following result, which is a security property
+of message-passing contracts :
+
+\paragraph{Lemma ($\MSGS$-payouts and DS)}
+Given a filter $\fun{F}$, a UTxO constraint $\fun{c}$, and a structured contract
+$(\pi_{\fun{F,c}},~\pi_{\Tx},~\STRUC)$, $\STRUC_{\MSGS}$ is not vulnerable to
+DS with respect to the constraint $\fun{Pays}$.

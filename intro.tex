@@ -1,0 +1,119 @@
+\section{Introduction}
+\label{sec:intro}
+
+Message-passing is the standard for communicating data and assets between contracts in
+account-based ledgers \cite{ethereum} \cite{zilliqa} \cite{tezos}.
+Both sending and receiving a message is performed atomically as part of processing a
+transaction containing that message. In some cases, the transaction itself
+may be referred to as a message \cite{tezos}.
+Communication between scripts in UTxO-based ledgers follows a different architecture.
+Smart contract enabled UTxO models such as Cardano \cite{alonzo}, Algorand \cite{algorand-docs},
+and Ergo \cite{ergo} use scripts only to \emph{check} that certain changes being
+made by a transaction to the ledger state are allowed. A
+script may require that another script executes successfully given
+certain arguments, and within the same transaction. Script interaction
+and communication is implemented via such constraints on other scripts, which we refer to
+as \emph{dependencies}.
+
+In this work we present an EUTxO layer-2 implementation of \emph{asynchronous message-passing} as an
+alternative method of communication between individual scripts
+as well as the stateful contracts they implement (Section \ref{sec:messages}).
+We build this infrastructure on top of the extended UTxO ledger presented in
+\cite{eutxo}, and formalized in terms of the small-step semantics formalism \cite{steps}
+also used to specify the Cardano EUTxO-based ledger \cite{alonzo}. The
+stateful message-passing contract is an instantiation of the structured contract
+framework \cite{structured}. This framework includes the semantics for specifying
+and implementing a stateful contract, together with a proof obligation that
+the specification meets the implementation, formalized in Agda \cite{agda-structured}.
+
+The state of the message-passing contract is a set of messages. This state is represented
+on the ledger as a collection special NFT tokens storing message data,
+which are distributed across separate UTxO entries. Messages specify
+the output that was spent to validate their production. Thus, they serve as proof
+artefacts of the validation of specific output-locking contracts, with specific
+inputs. This gives messages a verified \emph{sender}. Similarly,
+message tokens can only be spent and burned by an authenticated \emph{recipient},
+another contract that must validate with particular inputs when consuming a message.
+Any script is able to interface
+with the message-passing contract so long as the user input to the script can be
+decoded as a list of messages being produced and consumed.
+
+The message-passing structured contract we propose addresses
+some of the challenges of programming on an EUTxO ledger. It does so by
+defining a way to record authentically-sourced data and assets on an EUTxO ledger,
+for consumption by a specific recipient, in a highly concurrent way.
+In addition to providing a way to interpret the notion of message-passing
+on an EUTxO ledger, our distributed stateful contract design demonstrates
+the flexibility of the structured contract formalism for implementation
+of contracts with state contained in multiple UTxO entries. Unlike a centralized
+design with a single UTxO entry keeping track of all messages, our design allows
+arbitrary reordering of message-passing transactions whenever one of them does not
+consume messages (or other outputs) produced by the other.
+We demonstrate that this scheme can be used in the following ways, addressing the
+corresponding challenges of EUTxO programming :
+
+\begin{itemize}
+  \item[(i)] as a authenticated output of a function call with specific
+  inputs to the function, similar to the technique called memoization (Section \ref{sec:partial}) ;
+
+  \item[(ii)] as intermediate storage of assets and data for the purpose
+  of asynchronous communication between stateful contracts
+   (Section \ref{sec:async});
+\end{itemize}
+
+Next (Section \ref{sec:doublesat}), we present a formalization of an as-of-yet unformalized, but widely discussed
+problem in EUTxO programming :
+the \emph{double satisfaction problem} (DSP) \cite{marlowe-audit-tech} \cite{plutus-docs} \cite{ds-blog}
+\cite{marloweaudit}. DSP may occur when multiple scripts within
+the same transaction share the same constraint, which is satisfied. For example,
+by making a \emph{single} payout to an address as required
+by two separate contracts, even though the intent of each of the contracts was that
+the address should have received a separate payment, for a total of two.
+Using the structured contract formalism, we formalize when a constraint
+of a contract is vulnerable to such a situation. We then demonstrate that making
+payouts via messages is not susceptible to double satisfaction.
+
+The main contributions of this work are :
+
+\begin{itemize}
+  \item[(i)] the specification and implementation of a message-passing structured
+  contract ;
+  \item[(ii)] two applications of the message-passing contract : messages as
+  outputs of function calls, and messages-passing as a means of asynchronous
+  communication of data and transfer of assets between contracts and within a contract ;
+  \item[(iii)] formalization of the double satisfaction problem ;
+  \item[(iv)] a result stating that if payouts are specified via changes in the
+  state of the message-passing contract, the specification of the required
+  payouts is not susceptible to DS
+\end{itemize}
+
+% separate computation and communication
+
+
+
+% This framework provides a method for
+% demonstrating the correctness of the implementation of a stateful program specification.
+% Specific design patterns describing a more concrete
+% approach to modeling stateful programs on a EUTxO ledger, such as constraint
+% emitting machines \cite{eutxoma}, correspond to subsets of the structured
+% contracts framework.Our message-passing structured contract,
+% supports an asynchronous exchange of messages
+%
+% specify an asynchronous message-passing structured contract.
+% The structured contract framework \cite{structured} is a framework
+% for specifying stateful programs running on the EUTxO ledger using
+% the same small-steps semantics approach used for specifying ledger
+% functionality \cite{alonzo}. This framework provides a method for
+% verifying the correctness of the implementation of a stateful program specification.
+% Specific design patterns describing a more concrete
+% approach to modeling stateful programs on a EUTxO ledger, such as constraint
+% emitting machines \cite{eutxoma}, correspond to subsets of the structured
+% contracts framework.
+%
+% Stateful contracts in the extended UTxO model come with a unique
+% set of programming challenges. To address some of those challenges,
+% in this work we present a structured contract
+% formalizing the concept of \emph{message-passing} in the EUTxO ledger.
+% It constitutes a new paradigm for managing and implementing asynchronous
+% communication between scripts and between structured contracts, as well as between
+% scripts implementing a single structured contract.
