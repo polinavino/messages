@@ -1,0 +1,8 @@
+1. Title of the paper :
+Message-passing in the Extended UTxO Ledger
+
+2. Names of all of the authors :
+Polina Vinogradova, Orestis Melkonian
+
+3. Name and email address of the corresponding author :
+Polina Vinogradova, polina.vinogradova@iohk.io

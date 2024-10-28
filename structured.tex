@@ -1,368 +1,72 @@
-\section{The Structured Contract Formalism}
+\subsection{Structured contracts}
 \label{sec:struc}
 
-The structured contract framework is a formalism for specifying and demonstrating
-the correctness of the implementation of a stateful contract on $\LEDGER$.
-A structured contract is specified in terms of small-steps semantics, then
-a ledger reprsentation is given for its state and input types. The ledger representation
-consists of
-a pair of projection functions : (i) one which computes the contract state from
-a given UTxO state (or fails), and (ii) one which computes the input to the contract
-from the transaction being applied to the ledger. The environment (slot number)
-is ignored because scripts are not permitted to inspect it in our model.
+The structured contract framework~\cite{structured} is a formalism for specifying and demonstrating
+the integrity of the implementation of a stateful contract on $\LEDGER$.
+We give the definition here for self-containment and in order to introduce the
+appropriate notation.
+A structured contract includes a small-steps semantics specification, as well as
+a ledger representation of its state and input. The ledger representation
+is a pair of functions: one which computes the contract state from
+a given UTxO state (or fails), and another which computes the input to the contract
+for a given transaction.
 
-For any step in the $\LEDGER$, the representation functions must compute a
-corresponding valid step in the structured contract any time the starting
-UTxO state maps to a contract state (rather than fails).
+For a given valid $\LEDGER$ step, the representation functions must compute a
+valid step in the structured contract specification given that the starting
+UTxO state corresponds to a contract state. This integrity constraint is
+expressed as a proof obligation for the instantiation of a structured contract.
 This design guarantees that no invalid contract state updates are ever possible
-on the ledger. Note that it is not necessarily true that for any contract
-step, a corresponding valid ledger step exists. Specifying when one does exist
-is the subject of future work.
+on the ledger.
 
-\paragraph{Definition. }
-\label{def:structured}
-
-Suppose $\STRUC$ is small-step transition systems of the following type :
+Suppose $\STRUC \subseteq (\emptytypeT \times \State \times \Input \times \State)$
+is a small-step transition system.
+Let $\pi : \UTxO \to \State \cup \emptytypeT$ and $\pi_{\Tx} : \Tx \to \Input$
+be functions such that :
 \begin{equation*}
-  \_ \vdash
-  \var{\_} \trans{struc}{\_} \var{\_}
-  \in \powerset (\emptytype \times \State_{\STRUC} \times \Input_{\STRUC} \times \State_{\STRUC})
+\inference
+{
+    \\~\\
+    \pi~u~ \neq~ \emptytype &
+    {
+    \begin{array}{c}
+        e\\
+    \end{array}
+    }
+    \vdash
+    {
+    \left(
+        \begin{array}{r}
+        \var{u} \\
+        \end{array}
+    \right)
+    }
+    \trans{ledger}{\var{t}}
+    {
+    \left(
+        \begin{array}{r}
+        \var{u'} \\
+        \end{array}
+    \right)
+    }
+    \\~\\
+}
+{
+    (\pi~u'~ \neq~ \emptytype) ~~\wedge~~
+    \begin{array}{r}
+    \emptytype \\
+    \end{array}
+\vdash
+    (\pi~u)
+    \trans{struc}{\pi_{\Tx}~t}
+    (\varUpdate{\pi~u'})
+}
 \end{equation*}
 
-and let
-\begin{align*}
-  \pi_{\STRUC} : \UTxO \to \State_{\STRUC} \cup \emptytypeT \\
-  \pi_{\Tx,\STRUC} : \Tx \to \Input_{\STRUC}
-\end{align*}
-
-be some projection functions such that the following implication holds :
-
-  \begin{equation}
-    \inference[$\sim >$]
-    {
-      \\~\\
-      {
-        \begin{array}{c}
-          e\\
-        \end{array}
-      }
-      \vdash
-      {
-        \left(
-          \begin{array}{r}
-            \var{u} \\
-          \end{array}
-        \right)
-      }
-      \trans{ledger}{\var{t}}
-      {
-        \left(
-          \begin{array}{r}
-            \var{u'} \\
-          \end{array}
-        \right)
-      }
-      \\~\\
-    }
-    {
-      \begin{array}{r}
-        * \\
-      \end{array}
-    \vdash
-      (\pi_{\STRUC}~u)
-      \trans{struc}{\pi_{\Tx,\STRUC}~t}
-      (\varUpdate{\pi_{\STRUC}~u'})
-    }
-  \end{equation}
-
-The triple $(\STRUC, \pi_{\STRUC}, \pi_{\Tx,\STRUC})$ is called a \emph{structured
-contract}, and we denote it by
-\[(\STRUC, \pi_{\STRUC}, \pi_{\Tx,\STRUC}) \succeq \LEDGER\]
-
-Note that the range of the function $\pi_{\STRUC}$ is
-$\State_{\STRUC} \cup \emptytypeT$, where $\emptytypeT$ is a
-singleton. This indicates that $\pi_{\STRUC}$ is \emph{partial}. Note also that
-the block-level data is never exposed to user-defined scripts in this model,
-so that the context of a structured contract is necessarily of type $\{\emptytype\}$.
-
-% \paragraph{Subsystems discussion. }
-%
-% We define a lockstep simulation-type subsystem relation here because it allows for the most uniform
-% definition of a subsystem of a transition system. It also ensures that (i) each change observable within
-% the subsystem is observable on the ledger, and (ii) it allows us to define a
-% \emph{subsystem step} as an update to the subsystem done by a transaction.
-% A lockstep subsystem does not require separating inputs into those that affect
-% the state, and those that do not, and treating them differently.
-%
-% This means that \emph{most} subsystem will include
-% a trivial step. This is a deliberate choice to ensure all behaviour of the subsystem transition
-% is made explicit at the specification level. In particular, a trivial step may
-% have specific predicates that disambiguate it from non-trivial steps in a (possibly)
-% non-deterministic specification. On the other hand, a trivial step in the
-% larger system may not always have to have a corresponding step in the subsystem,
-% hence the $u \neq u'$ constraint.
-%
-% % Note here that, given a contract state $s$ such that $\var{utxo} \sim s$,
-% % the only entries in the UTxO set are ones that contain some part of the
-% % representation of the state $s$. Then, any transaction applied to $\var{utxo}$
-% % will necessarily change some part of the state representation, and therefore
-% % correspond to a non-trivial state update.
-%
-% Note that \ref{def:subsystem} includes a \emph{proof obligation} that must be
-% fulfilled as part of specifying the subsystem, similar to how defining a
-% a \emph{group} requires a proof of the associativity of a group action.
-% As it is an obligation, and \emph{does not define a rule}, one can construct
-% plenty of transition
-% systems with relations for which this proof obligation cannot
-% be fulfilled. However, \emph{if} it is possible, $\STRUC$ is a subsystem of $\TRANS$.
-%
-% Note that subsystem relation is transitive and reflexive.
-% The symmetric property
-% does not hold for many of the examples of interest.
-% Whenever $\TRANS~=~\STRUC$,
-% we say that the two transition systems \emph{are equivalent}. Note here that
-% this is an equality of relations, indicating that they have the same membership, but
-% the rules specifying that membership for both relations may be different.
-%
-% Note also that an arbitrary transition $\mathsf{TRANS}$ may not be a function
-% of the first three variables,
-% and may well allow two distinct final states for a given initial state, environment,
-% and input. However, the $\mathsf{LEDGER}$ rule is indeed functional, as the
-% final state variable $\var{utxo'}$ in its only rule, $\mathsf{ApplyTx}$,
-% is defined as a function of the other values in the precondition.
-%
-% \subsection{Structured contracts. }
-% \label{sec:struc-def}
-%
-% Our subsystem definition is general, however, the rest of this work is
-% geared towards reasoning about the programmable
-% parts of the ledger, ie. those where the permissions are controlled by user-defined
-% scripts. For this reason, we define a particular class of subsystems.
-%
-% A \emph{structured contract} $\STRUC$ is a transition system subsystem of the $\LEDGER$, where
-% the $\Env$ of $\STRUC$ is $\emptytype$, and
-% for some functions $\pi_{\STRUC} : \UTxO \to \State_{\STRUC}^?$ and $\pi_{\Tx,\STRUC} : \Tx \to \Input_{\STRUC}$, the relations $\sim$ and $\sim >$ are given by :
-%
-% \begin{align*}
-%   \var{utxo}~\sim~s &\leteq (\pi_{\STRUC}~\var{utxo} ~=~s)
-%   \nextdef
-%   (\var{slot},~\var{tx})~\sim >~ (\emptytype, i) &\leteq (\pi_{\Tx,\STRUC}~\var{tx} = i)
-% \end{align*}
-%
-% As shorthand, we denote the subsystem relation of structured contracts as
-%
-% \[ (\STRUC,~\pi_{\STRUC},~\pi_{\Tx,\STRUC}) \succeq \LEDGER\]
-%
-% We also sometimes denote both $\pi_{\Tx,\STRUC}$ and $\pi_{\STRUC}$
-% by $\pi$ or $\pi_{\Tx}$ when the context is clear. Note here that $\LEDGER$
-% has no trivial transitions due to the fact that transactions without
-% inputs are not allowed by rule \ref{rule:has-input}, so the UTxO set is necessarily updated
-% by the transaction.
-%
-% The purpose of structured contracts is to represent all ledger
-% subsystems that are programmable by the user via scripts.
-% The reason that the environment of the structured contract is empty is that no
-% environment data from $\LEDGER$ is ever available to any scripts used to implement contracts.
-% In particular, scripts are not able to inspect the current $\var{slot}$ number.
-% It is possible that $\LEDGER$ is also a subsystem of $\STRUC$, but this is by no means
-% a requirement. We given an example of when this is the case and how we can demonstrate
-% this in \ref{sec:toggle}, however, specifying the class of structured contracts
-% for which this is necessarily the case is the subject of future work.
-%
-% The reason that the $\pi_{\State}$ function is partial is that we may not want to
-% relate certain ledger states to specification states, such as ones where
-% the structured contract UTxO representation is either uninitialized
-% or cannot be initialized. However, any ledger that that is
-% related to a $\STRUC$ state can only ever be updated by a transaction to another
-% state that is related to a $\STRUC$ state, and any such update must always correspond
-% to a valid $\STRUC$ update.
-%
-% \subsection{Preservation of Value example}
-% \label{sec:pov}
-%
-% The EUTxO ledger transition system $\LEDGER$ is said to satisfy the
-% \emph{preservation of value (POV)} property. A \emph{local} POV is
-% the property that each valid transaction mints exactly the difference
-% between the value in the UTxOs in spends and those it creates.
-% This is ensured by the ledger rule \ref{rule:value-is-preserved}, which is
-%
-% \[ \mint~\var{tx} + \sum_{i \in \inputs~\var{tx},~(\outputref~i)\mapsto~o~\in~\var{utxo}} \val~\var{o} = \sum_{o \in \outputs~\var{tx}} \val~\var{o} \]
-%
-% The \emph{global} POV follows from the local POV and is the property we will express using the
-% structured contract formalism. It states that the sum total of all the tokens
-% recorded on the ledger is changed by exactly the amount minted or burned by the
-% transaction,
-%
-% \[ \sum_{\var{or}\mapsto \var{out}\in \var{utxo'}}~\val~\var{out} ~= ~(\sum_{\var{or}\mapsto \var{out}\in \var{utxo}}~\val~\var{out}) ~+~(\fun{mint}~ \var{tx}) \]
-%
-% where any $(\var{s},~\var{utxo},~\var{tx},~\var{utxo'}) \in \LEDGER$,
-% and (recall that) the updated UTxO set is defined as follows
-%
-% \[ \var{utxo'}~\leteq~(\fun{txins}~{tx} \subtractdom \var{utxo}) \cup \fun{mkOuts}~{tx} \]
-%
-% We can define a subsystem $\mathsf{POV}$ of $\LEDGER$ that specifies how the total value of
-% all assets on the ledger is updated :
-%
-% % \begin{figure}[htb]
-%   \emph{Transition type}
-%   \begin{equation*}
-%     \_ \vdash
-%     \var{\_} \trans{pov}{\_} \var{\_}
-%     \subseteq \powerset (\emptytype \times \Value \times \Tx \times \Value)
-%   \end{equation*}
-%   %
-%   \emph{Subsystem relations}
-%   \begin{align*}
-%     \pi_{\Tx,\POV}~\var{tx}~ ~&\leteq~\var{tx}
-%     \nextdef
-%     \pi_{\POV}~\var{utxo}~&\leteq~\sum_{\wcard \mapsto \var{out}\in \var{utxo}}~\val~\var{out}
-%   \end{align*}
-%   %
-%   \emph{Transition rule}
-%   \begin{equation}
-%     \inference[UpdateValTotal]
-%     {
-%     i \leteq \fun{mint}~\var{tx}
-%     \\ ~ \\
-%     }
-%     {
-%     \begin{array}{l}
-%       \\
-%     \end{array}
-%       \vdash
-%       \left(
-%       \begin{array}{r}
-%         \var{s} \\
-%       \end{array}
-%       \right)
-%       \trans{pov}{tx}
-%       \left(
-%       \begin{array}{r}
-%         \varUpdate{\var{s}~+~\var{i}}  \\
-%       \end{array}
-%       \right) \\
-%     }
-%   \end{equation}
-% %   \caption{Specification of the $\mathsf{UpdateValTotal}$ POV subsystem}
-% %   \label{fig:pov-spec}
-% % \end{figure}
-%
-% \begin{equation}
-%   \inference[UpdatemyNFTTotal]
-%   {
-%   i \leteq \{~\fun{myNFTPolicy}~\mapsto~\var{tkns}~\in~~\fun{mint}~\var{tx}~\} \\~\\
-%   0~\leq~s~\leq~s~+~i~\leq~\{~\fun{myNFTPolicy}~\mapsto~(""~ \mapsto~1)~\}
-%   \\ ~ \\
-%   }
-%   {
-%   \begin{array}{l}
-%     \\
-%   \end{array}
-%     \vdash
-%     \left(
-%     \begin{array}{r}
-%       \var{s} \\
-%     \end{array}
-%     \right)
-%     \trans{nft}{tx}
-%     \left(
-%     \begin{array}{r}
-%       \varUpdate{\var{s}~+~\var{i}}  \\
-%     \end{array}
-%     \right) \\
-%   }
-% \end{equation}
-%
-% The value is
-% changed exactly by the amount specified in the mint field, so that the subsystem proof
-% obligation corresponds exactly to the global POV formulation.
-% To complete the definition, it remains to prove
-% the subsystem relation, which requires that, given
-%
-% \begin{align*}
-%   (\var{slot},~\var{utxo},~\var{tx},~\var{utxo'}) ~\in \LEDGER
-% \end{align*}
-%
-% necessarily
-%
-% \begin{align*}
-%   (\emptytype,~\pi~\var{utxo},~\pi~\var{tx},~\pi~\var{utxo'}) \in \POV
-% \end{align*}
-%
-% So, we must show that
-%
-% \[ \sum_{\wcard \mapsto \var{out}\in \var{utxo'}}~\val~\var{out} = \sum_{\wcard \mapsto \var{out}\in \var{utxo}}~\val~\var{out} + \fun{mint}~\var{tx} \]
-%
-% The proof relies on the (local) POV $\LEDGER$ rule :
-%
-% % \begin{ruledfigure}{t}
-%   \begin{align*}
-%     \sum_{\var{or}\mapsto \var{out}\in \var{utxo'}}~\val~\var{out}
-%     & = ~\sum_{\var{or}\mapsto \var{out}\in ((\fun{getORefs}~\var{tx}) \subtractdom \var{utxo}) \cup \fun{mkOuts}~{tx}}~\val~\var{out} \\
-%     & = ~\sum_{\var{or}\mapsto \var{out}\in \var{utxo}}~\val~\var{out}
-%     ~-~\sum_{i \in \inputs~\var{tx},~(\outputref~i\mapsto~\var{out})\in \var{utxo}}~\val~\var{out}
-%     ~+~\sum_{\var{out} \in \outputs ~\var{tx}}~\val~\var{out} \\
-%     & = ~\sum_{\var{or}\mapsto \var{out}\in \var{utxo}}~\val~\var{out}
-%     ~-~\sum_{i \in \inputs~\var{tx},~(\outputref~i\mapsto~\var{out})\in \var{utxo}}~\val~\var{out}
-%     ~+~(\mint~\var{tx}) \\
-%     &~~~~~~~ + \sum_{i \in \inputs~\var{tx},~(\outputref~i\mapsto~\var{out})\in \var{utxo}}~\val~\var{out} \\
-%     & = ~\sum_{\var{or}\mapsto \var{out}\in \var{utxo}}~\val~\var{out}  ~+~(\mint~\var{tx})
-%   \end{align*}
-% % \caption{Proof of the $\mathsf{Simulate}$ constraint for POV}
-% % \label{fig:pov-pf}
-% % \end{ruledfigure}
-%
-% Now, we observe that the
-% statement that $\mathsf{POV}$ is a subsystem of the ledger is exactly the statement that the
-% preservation of value property of $\LEDGER$ holds.
-% This gives a simple but illustrative example of the power of the subsystem definition
-% to use local properties to derive global invariants.
-%
-% % Prove the POV property for the subsystem
-% % Automatically derive the POV property for the ledger
-% % While the workflow of Fig.9 is:
-% % Prove an ad-hoc property for the subsystem (not really formulated as the POV property of the subsystem)
-% % Wow! It turns out it's exactly identical to the POV property for the ledger, QED.
-%
-%
-% \paragraph{NFT example.}
-% \label{sec:nft-example}
-%
-% We specify
-% a structured contract keeping track of the total amount of a specific (unburnable)
-% NFT token.
-% The defining feature of this contract is that the total amount of this token in
-% existence should always be either 1 or 0, and it cannot be burned.
-% We can define the contract specification relation that only add up tokens under
-% policy $\fun{myNFTPolicy}$ with the following changes to the definition of the
-% state projection function :
-%
-% \begin{align*}
-%   & \pi~\var{utxo}~ \leteq~\begin{cases}
-%     0 & \text{ if } \fun{hasRef}~~\wedge~~s = 0 \\
-%     s & \text{ if } s = \{ ~\fun{myNFTPolicy}~\mapsto~\{""~ \mapsto~1\} ~\} ~~\wedge~~ \neg~\fun{hasRef}\\
-%     \emptytype & \text{ otherwise } \\
-%   \end{cases} \\
-%   &  \where \\
-%   &  ~~~~s \leteq~ \{~p~\mapsto~ \var{tkns}~\mid~p\mapsto \var{tkns} \in \sum_{\wcard \mapsto \var{out}\in \var{utxo}}~\val~\var{out},~p = \fun{myNFTPolicy}~\} \\
-%   &  ~~~~\fun{hasRef} \leteq (\fun{myNFTRef} \mapsto (\fun{myNFTScript},~\wcard,~d) \in \var{utxo})
-% \end{align*}
-%
-% Here, $\pi~\var{utxo}$ returns a non-$\emptytype$ result when either (i) the output
-% $\fun{myNFTRef} \mapsto (\fun{myNFTScript},~\wcard,~d)$ is in the UTxO set and no
-% NFTs under the policy $\fun{myNFTPolicy}$ have been minted yet, or (ii) the NFT under
-% the $\fun{myNFTPolicy}$ policy is already minted with the correct token name $""$
-% and quantity $1$, and there is no $\fun{myNFTRef}$ in the UTxO set output references.
-%
-%
-% This example differs from the general POV contract example in a
-% noteworthy way. The POV contract represents a property of the ledger transition system.
-% Constructing instances of POV contracts for tokens under specific policies, on the
-% other hand, is a tool for developing and verifying reliable minting policy code that behaves in
-% the specified way. It can be used to define and verify properties of the contract.
-% A sensible approach is to first leave the scripts in the specification (i.e.
-% $\fun{myNFTPolicy}$ and $\fun{myNFTScript}$) unspecified, and define the
-% specification update rules as function of the contract state token total,
-% as well as the input transaction.
-% Then, compose the unspecified scripts such that it possible to prove the required subsystem
-% relation $\sim >$.
+The triple $(\STRUC, \pi, \pi_{\Tx})$ is called a \emph{structured
+contract}, and we denote it by $(\STRUC, \pi, \pi_{\Tx}) \succeq \LEDGER$.
+Note that $\pi$ is function with an output that is a \emph{maybe} type, 
+$\State \cup \emptytypeT$, where $\emptytypeT$ is a
+singleton. When $\pi~u = \emptytype$, there is no
+contract state corresponding to the ledger state $u$.
+The block-level data is never exposed to user-defined scripts in this model,
+so that the context of a structured contract is necessarily $\emptytype \in \emptytypeT$.

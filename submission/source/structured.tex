@@ -1,0 +1,72 @@
+\subsection{Structured contracts}
+\label{sec:struc}
+
+The structured contract framework~\cite{structured} is a formalism for specifying and demonstrating
+the integrity of the implementation of a stateful contract on $\LEDGER$.
+We give the definition here for self-containment and in order to introduce the
+appropriate notation.
+A structured contract includes a small-steps semantics specification, as well as
+a ledger representation of its state and input. The ledger representation
+is a pair of functions: one which computes the contract state from
+a given UTxO state (or fails), and another which computes the input to the contract
+for a given transaction.
+
+For a given valid $\LEDGER$ step, the representation functions must compute a
+valid step in the structured contract specification given that the starting
+UTxO state corresponds to a contract state. This integrity constraint is
+expressed as a proof obligation for the instantiation of a structured contract.
+This design guarantees that no invalid contract state updates are ever possible
+on the ledger.
+
+Suppose $\STRUC \subseteq (\emptytypeT \times \State \times \Input \times \State)$
+is a small-step transition system.
+Let $\pi : \UTxO \to \State \cup \emptytypeT$ and $\pi_{\Tx} : \Tx \to \Input$
+be functions such that :
+\begin{equation*}
+\inference
+{
+    \\~\\
+    \pi~u~ \neq~ \emptytype &
+    {
+    \begin{array}{c}
+        e\\
+    \end{array}
+    }
+    \vdash
+    {
+    \left(
+        \begin{array}{r}
+        \var{u} \\
+        \end{array}
+    \right)
+    }
+    \trans{ledger}{\var{t}}
+    {
+    \left(
+        \begin{array}{r}
+        \var{u'} \\
+        \end{array}
+    \right)
+    }
+    \\~\\
+}
+{
+    (\pi~u'~ \neq~ \emptytype) ~~\wedge~~
+    \begin{array}{r}
+    \emptytype \\
+    \end{array}
+\vdash
+    (\pi~u)
+    \trans{struc}{\pi_{\Tx}~t}
+    (\varUpdate{\pi~u'})
+}
+\end{equation*}
+
+The triple $(\STRUC, \pi, \pi_{\Tx})$ is called a \emph{structured
+contract}, and we denote it by $(\STRUC, \pi, \pi_{\Tx}) \succeq \LEDGER$.
+Note that $\pi$ is function with an output that is a \emph{maybe} type, 
+$\State \cup \emptytypeT$, where $\emptytypeT$ is a
+singleton. When $\pi~u = \emptytype$, there is no
+contract state corresponding to the ledger state $u$.
+The block-level data is never exposed to user-defined scripts in this model,
+so that the context of a structured contract is necessarily $\emptytype \in \emptytypeT$.

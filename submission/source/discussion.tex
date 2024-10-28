@@ -1,0 +1,127 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Related work}
+\label{sec:related}
+
+Message-passing is the backbone of distributed computing~\cite{distributed,design}.
+The $\pi$-calculus process calculus has been developed to formalize
+message-passing between processes in distributed computing scenarios~\cite{picalc}.
+We conjecture that it may be possible to apply this formalism to
+message-passing between structured contracts.
+
+The UTxO ledger model introduced by Bitcoin~\cite{bitcoin},
+as well as EUTxO ledger implementations~\cite{ergo},
+are themselves message-passing schemes, wherein a transaction is a message to a script.
+Our scheme reinterprets messages in a way that allows them to have a single verified
+sender output, and a receiver that is also an output. The contract $\MSGS$
+can be viewed as a kind of linear sub-ledger within $\LEDGER$, which can be
+used as a tool in specification and verification of properties of communicating contracts.
+
+In account-based ledgers~\cite{ethereum,tezos,zilliqa}, (synchronous)
+message-passing is the default mode of communication between contracts.
+The Scilla programming language~\cite{scilla}, with its emphasis on separating
+communication from computation for stateful contracts on the Zilliqa ledger~\cite{zilliqa},
+inspired this work.
+Even though Scilla was developed for the account-based ledger model, the communicating
+automata structure it uses to model contracts may be useful in
+describing message-passing structured contracts as well.
+
+Existing work on rigs~\cite{rigs}, which are cryptographic data structures that
+provide integrity-at-a-distance, presents an approach to maintaining data
+integrity across potentially multiple state-managing machines.
+Aspects of this approach are similar in spirit to the thread-token technique
+we use to uniquely identify messages and ensure non-duplication of message tokens on
+the ledger; both are based on temporal and causal dependencies of operations on one another.
+
+A version of asynchronous, but centralized, message-passing is implemented
+in the ERC-20 Ethereum contract for fungible tokens~\cite{erc20}.
+The ERC-20 design is primarily for asset transfers, whereas ours can be used to communicate
+authenticated data as well. Implementing message-passing
+via a centralized data-storage contract such as ERC-20 on an EUTxO ledger would significantly
+increase contention over UTxO entries between message-passing transactions, and therefore
+reduce concurrency.
+
+Formalization of blockchain and ledger functionality forms a foundation for
+rigorous reasoning about smart contracts security, discussed in the
+detailed overview~\cite{leveragingfm}. Mathematical models of
+EUTxO and UTxO ledgers and smart contracts on those ledgers, including ours,
+often specify a simplified version of actual
+implementations~\cite{eutxo,eutxoma,blockalg,nester,algorandformal,bitcoinformal}.
+
+% In this work we continue this tradition of formalizing ledgers, smart contracts, and communication
+% models between ledger contracts, enabling us to formally study their vulnerabilities. In particular,
+% this work builds on the work
+% done in \cite{structured} \cite{eutxoma}
+% on formalizing stateful program models and their security properties.
+
+\subsection{Future work}
+\label{sec:future}
+
+The scheme we presented in Fig.~\ref{fig:messages-rule} is such that
+the outputs that must be spent in order to
+consume a given message are fully specified
+(via the $\fun{msgTo}$ field of the message), including their
+scripts, values, and datums. In future work, this constraint
+could be relaxed for a more permissive and versatile system design.
+A \emph{time of expiry} can be added to the message structure and used to specify a time
+after which a message can be consumed under different constraints.
+Changing the type of the message-passing redeemer from a list of messages
+to a list of messages (for communication) together with some extra data (for computation)
+can can allow a given script to more easily engage in both computation and communication
+as a result of applying a transaction.
+
+In this work, we did not specify trace-based properties of $\LEDGER$
+or any structured contract $\STRUC$. This topic, in general, is the subject of future
+work. Of particular interest are structured contracts that can be guaranteed
+to take a step without the need for executing "external" scripts, i.e. ones other
+than those used to implement that contract. It may be unrealistic for a contract to
+always take a step without \emph{any} external contracts validating,
+e.g. running a script which locks funds used for paying into the contract. However, it
+seems feasible to limit a structured contract's dependencies to message-passing only.
+Formalizing and proving properties about this class of structured contracts in the future is
+of interest.
+
+In the future, we intend to mechanize this contract and its applications in Agda,
+building upon the formal EUTxO ledger model~\cite{eutxo}
+and structured contracts framework~\cite{structured}.
+To achieve the goal of integrating our work into
+the more realistic mechanization of the Cardano ledger~\cite{agdaspec},
+and eventually implement it on the platform,
+some adjustments to our design may be required.
+
+\subsection{Conclusion}
+\label{sec:conclusion}
+
+Principled approaches to implementing and reasoning about the behavior of
+stateful smart contracts in the EUTxO
+ledger model have already been formalized in existing work.
+However, such models do not include any special provisions for analyzing communication
+among contracts. In this work, we focus on formalizing communication of data and assets among
+scripts as well as the stateful contracts they implement.
+We first formalize a common problem in contract interaction --- the double satisfaction problem,
+which has to do with a single transaction satisfying the constraints of multiple scripts it executes.
+We demonstrate how a single pay-out
+made by a transaction in the case where a payment \emph{per executed script}
+was expected may constitute an instance of the DS formalism we presented.
+
+We define what a message data structure is in the context of an EUTxO ledger --- a
+unique identifier associated with the data and assets being sent, as well as its sender
+and receiver outputs. We then define how to use the ledger asset-minting mechanism
+to encode messages as tokens which appear in the UTxO set. Messages are
+sent and received asynchronously, tracked by a
+distributed structured contract $\MSGS$. A proof of correctness of its implementation
+guarantees that minted message tokens specify verified sender, receiver, data,
+and come with appropriate amounts of sent assets.
+
+To give examples of formal reasoning about the message-passing contract and its applications, we present
+two use cases. The first is a variation on memoization,
+wherein message tokens specifying input-output pairs of a particular computation
+serve as proof artefacts of its correctness. The second formalizes
+the idea of structured contract communication via message-passing.
+We formalize when a message
+constitutes a "payout" from a contract, and then demonstrate
+how expressing payouts as messages can address vulnerability to the DSP
+in the case of payouts. The necessity of executing the $\MSGS$-implementing
+scripts (which may require fee payment) whenever messages are sent and received
+is a limitation of our design.

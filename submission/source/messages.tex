@@ -1,0 +1,481 @@
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+
+% URLs
+\usepackage[unicode=true,pdftex,pdfa,colorlinks=true]{hyperref}
+\usepackage{xcolor}
+\usepackage{color}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+
+\hyphenation{}
+\usepackage{url}
+
+% *** MATHS PACKAGES ***
+%
+\usepackage{iohk}
+%\usepackage[cmex10]{amsmath}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+%\usepackage{amsthm}
+
+% \usepackage[margin=2.5cm]{geometry}
+\usepackage{iohk}
+\usepackage{microtype}
+\usepackage{mathpazo} % nice fonts
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+\usepackage{latexsym}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+\usepackage{extarrows}
+\usepackage{slashed}
+\usepackage[capitalise,noabbrev,nameinlink]{cleveref}
+\usepackage{float}
+
+% *** ALIGNMENT PACKAGES ***
+%
+\usepackage{array}
+\usepackage{float}  %% Try to improve placement of figures.  Doesn't work well with subcaption package.
+\usepackage{subcaption}
+\usepackage{caption}
+
+\usepackage{subfiles}
+% \usepackage{geometry}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{listings}% http://ctan.org/pkg/listings
+\lstset{
+  basicstyle=\ttfamily,
+  mathescape
+}
+\usepackage{alltt}
+\usepackage{paralist}
+
+% inference rules
+\usepackage{semantic}
+
+\newcommand{\code}{\texttt}
+\renewcommand{\i}{\textit}  % Just to speed up typing: replace these in the final version
+\renewcommand{\t}{\texttt}  % Just to speed up typing: replace these in the final version
+\newcommand{\s}{\textsf}  % Just to speed up typing: replace these in the final version
+\newcommand{\msf}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\mi}[1]{\ensuremath{\mathit{#1}}}
+
+%% A figure with rules above and below.
+\newcommand\rfskip{3pt}
+%\newenvironment{ruledfigure}[1]{\begin{figure}[#1]\hrule\vspace{\rfskip}}{\vspace{\rfskip}\hrule\end{figure}}
+\newenvironment{ruledfigure}[1]{\begin{figure}[#1]}{\end{figure}}
+
+%% Various text macros
+\newcommand{\true}{\type{True}}
+\newcommand{\false}{\type{False}}
+
+\newcommand{\hash}[1]{\ensuremath{#1^{\#}}}
+
+\newcommand\mapsTo{\ensuremath{\mapsto}}
+\newcommand\cL{\ensuremath{\{}}
+\newcommand\cR{\ensuremath{\}}}
+
+\newcommand{\List}[1]{\ensuremath{\s{List}[#1]}}
+\newcommand{\Set}[1]{\ensuremath{\mathbb{P}~#1}}  %{\ensuremath{\s{Set}[#1]}}
+\newcommand{\FinSet}[1]{\ensuremath{\s{FinSet}[#1]}}
+\newcommand{\Interval}[1]{\ensuremath{\s{Interval}[#1]}}
+\newcommand{\FinSup}[2]{\ensuremath{\s{FinSup}[#1,\linebreak[0]#2]}}
+% ^ \linebeak is to avoid a bad line break when we talk about finite
+% maps.  We may be able to remove it in the final version.
+\newcommand{\supp}{\msf{supp}}
+
+\newcommand{\Script}{\ensuremath{\s{Script}}}
+\newcommand{\scriptAddr}{\fun{scriptAddr}}
+\newcommand{\ctx}{\ensuremath{\s{Context}}}
+\newcommand{\vlctx}{\ensuremath{\s{ValidatorContext}}}
+\newcommand{\mpsctx}{\ensuremath{\s{PolicyContext}}}
+
+\newcommand{\emptymap}{\ensuremath{\{\}}}
+\newcommand{\emptytype}{\star}
+\newcommand{\emptytypeT}{\{\star\}}
+\newcommand{\verify}{\msf{verify}}
+
+\newcommand{\mkContext}{\ensuremath{\s{mkContext}}}
+\newcommand{\mkTxInfo}{\ensuremath{\s{mkTxInfo}}}
+\newcommand{\mkVlContext}{\ensuremath{\s{mkValidatorContext}}}
+\newcommand{\mkMpsContext}{\ensuremath{\s{mkPolicyContext}}}
+\newcommand{\checkSig}{\ensuremath{\s{checkSig}}}
+
+\newcommand{\applyScript}[1]{\ensuremath{\llbracket#1\rrbracket}}
+\newcommand{\applyMPScript}[1]{\ensuremath{\llbracket#1\rrbracket}}
+
+\newcommand{\unionoverrideMinus}{\ensuremath{\mathbin{\cup_{-}}}}
+
+% Macros for eutxo things.
+\newcommand{\tx}{\fun{tx}}
+\newcommand{\TxId}{\ensuremath{\s{TxId}}}
+\newcommand{\TxInfo}{\ensuremath{\s{TxInfo}}}
+\newcommand{\txId}{\msf{txId}}
+\newcommand{\txrefid}{\fun{id}}
+\newcommand{\Address}{\ensuremath{\s{Address}}}
+\newcommand{\DataHash}{\ensuremath{\s{DataHash}}}
+\newcommand{\hashData}{\fun{dataHash}}
+\newcommand{\idx}{\fun{index}}
+\newcommand{\inputs}{\fun{inputs}}
+\newcommand{\outputs}{\fun{outputs}}
+\newcommand{\Out}{\type{Output}}
+\newcommand{\validityInterval}{\fun{validityInterval}}
+\newcommand{\scripts}{\fun{scripts}}
+\newcommand{\mint}{\fun{mint}}
+\newcommand{\mintScripts}{\fun{mintScripts}}
+\newcommand{\mintScsRdmrs}{\fun{mintScsRdmrs}}
+\newcommand{\mintRdmrs}{\fun{mintRdmrs}}
+\newcommand{\sigs}{\fun{sigs}}
+\newcommand{\fee}{\fun{fee}}
+\newcommand{\addr}{\fun{addr}}
+\newcommand{\pubkey}{\fun{pubkey}}
+\newcommand{\val}{\fun{value}}  %% \value is already defined
+\newcommand{\Value}{\type{Value}}
+\newcommand{\Redeemer}{\type{Redeemer}}
+\newcommand{\TxOutRef}{\type{TxIn}}
+\newcommand{\TxOut}{\type{TxOut}}
+\newcommand{\ScriptContext}{\type{ScriptContext}}
+\newcommand{\ScriptPurpose}{\type{ScriptPurpose}}
+\newcommand{\Datum}{\type{Datum}}
+\newcommand{\DCert}{\type{DCert}}
+\newcommand{\LCTx}{\type{LCTx}}
+\newcommand{\TxInInfo}{\type{TxInInfo}}
+
+\newcommand{\FState}{\type{FState}}
+\newcommand{\FInput}{\type{FInput}}
+\newcommand{\Send}{\type{Send}}
+\newcommand{\Receive}{\type{Receive}}
+\newcommand{\SimplInput}{\type{SimplInput}}
+\newcommand{\AccMsgs}{\type{AccMsgs}}
+\newcommand{\Context}{\type{Context}}
+\newcommand{\TxInput}{\type{TxInput}}
+
+\newcommand{\validator}{\fun{validator}}
+\newcommand{\redeemer}{\fun{redeemer}}
+\newcommand{\datum}{\fun{datum}}
+\newcommand{\datumHash}{\fun{datumHash}}
+\newcommand{\datumWits}{\fun{datumWitnesses}}
+\newcommand{\Data}{\type{Data}}
+\newcommand{\Input}{\type{Input}}
+\newcommand{\Output}{\type{Output}}
+\newcommand{\OutputRef}{\fun{OutputRef}}
+\newcommand{\Signature}{\ensuremath{\s{Signature}}}
+\newcommand{\Ledger}{\ensuremath{\s{Ledger}}}
+
+\newcommand{\outputref}{\fun{outputRef}}
+\newcommand{\outputrefs}{\fun{outputRefs}}
+\newcommand{\txin}{\fun{in}}
+\newcommand{\id}{\fun{id}}
+\newcommand{\lookupTx}{\msf{lookupTx}}
+\newcommand{\getSpent}{\msf{getSpentOutput}}
+
+\newcommand{\Tick}{\ensuremath{\s{Slot}}}
+\newcommand{\currentTick}{\msf{currentTick}}
+\newcommand{\spent}{\msf{spentOutputs}}
+\newcommand{\unspent}{\msf{unspentOutputs}}
+\newcommand{\txunspent}{\msf{unspentTxOutputs}}
+\newcommand{\eutxotx}{\msf{Tx}}
+
+
+\newcommand{\consumes}[1]{\msf{consumes(#1)}}
+\newcommand{\consumesOne}[1]{\msf{consumesOne(#1)}}
+\newcommand{\cid}{\fun{cid}}
+\newcommand{\inputValue}{\fun{inputValue}}
+\newcommand{\rMin}{r_{\fun{min}}}
+\newcommand{\rMax}{r_{\fun{max}}}
+
+\newcommand{\utxotx}{\msf{Tx}}
+
+\newcommand{\Quantity}{\ensuremath{\s{Quantity}}}
+\newcommand{\Asset}{\ensuremath{\s{Asset}}}
+\newcommand{\Policy}{\ensuremath{\s{Policy}}}
+\newcommand{\Quantities}{\ensuremath{\s{Quantities}}}
+\newcommand{\nativeCur}{\ensuremath{\mathrm{nativeC}}}
+\newcommand{\nativeTok}{\ensuremath{\mathrm{nativeT}}}
+\newcommand{\valC}{\mkValidator{\mathcal{C}}}
+\newcommand{\polC}{\mkPolicy{\mathcal{C}}}
+\newcommand\mkValidator[1]{\msf{validator}_#1}
+\newcommand\mkPolicy[1]{\msf{policy}_#1}
+
+\newcommand{\PublicKey}{\ensuremath{\s{PubKey}}}
+\newcommand{\PubKey}{\ensuremath{\s{PubKey}}}
+\newcommand{\PrivateKey}{\ensuremath{\s{PrivateKey}}}
+
+\newcommand{\pkey}{\ensuremath{\pi_{\mathsf{p}}}}
+\newcommand{\skey}{\ensuremath{\pi_{\mathsf{s}}}}
+
+\newcommand\B{\ensuremath{\mathbb{B}}}
+\newcommand\N{\ensuremath{\mathbb{N}}}
+\newcommand\Z{\ensuremath{\mathbb{Z}}}
+\renewcommand\H{\ensuremath{\mathbb{H}}}
+%% \H is usually the Hungarian double acute accent
+\newcommand{\emptyBs}{\ensuremath{\emptyset}}
+\newcommand{\leteq}{\ensuremath{\mathrel{\mathop:}=}}
+\newcommand{\Nt}{\ensuremath{\Diamond}}
+\newcommand{\Bool}{\type{Bool}}
+\newcommand{\Type}{\type{Type}}
+\newcommand{\STRUC}{\type{STRUC}}
+\newcommand{\BASIC}{\type{BASIC}}
+\newcommand{\LEDGER}{\type{LEDGER}}
+\newcommand{\LChanges}{\type{LChanges}}
+\newcommand{\LVal}{\type{LVal}}
+
+%ledger spec commands
+\newcommand{\Request}{\type{Request}}
+\newcommand{\LS}{\mathcal{L}\mathcal{S}}
+\newcommand{\State}{\type{State}}
+\newcommand{\CEMState}{\type{CEMState}}
+% \newcommand{\AccID}{\type{AccID}}
+\newcommand{\PCMT}{\type{PCMT}}
+\newcommand{\Accts}{\type{Accts}}
+% \newcommand{\Open}{\type{Open}}
+% \newcommand{\OArgs}{\type{OArgs}}
+% \newcommand{\Close}{\type{Close}}
+% \newcommand{\CArgs}{\type{CArgs}}
+% \newcommand{\Deposit}{\type{Deposit}}
+% \newcommand{\DArgs}{\type{DArgs}}
+\newcommand{\AMState}{\type{AMState}}
+% \newcommand{\Withdraw}{\type{Withdraw}}
+% \newcommand{\WArgs}{\type{WArgs}}
+% \newcommand{\Transfer}{\type{Transfer}}
+\newcommand{\TransferFrom}{\type{TransferFrom}}
+\newcommand{\TransferTo}{\type{TransferTo}}
+% \newcommand{\TArgs}{\type{TArgs}}
+\newcommand{\TTArgs}{\type{TTArgs}}
+\newcommand{\TFArgs}{\type{TFArgs}}
+\newcommand{\CEMInput}{\type{CEMInput}}
+\newcommand{\Tx}{\type{Tx}}
+\newcommand{\ID}{\type{ID}}
+\newcommand{\Th}{\mathcal{T}}
+\newcommand{\Tu}{\mathcal{U}}
+\newcommand{\T}{\type{T}}
+\newcommand{\Err}{\type{Err}}
+\newcommand{\ups}{\fun{update}}
+\newcommand{\FHBMT}{\type{FHBMT}}
+\newcommand{\UTxO}{\type{UTxO}}
+\newcommand{\UTxOState}{\type{UTxOState}}
+\newcommand{\TxIn}{\type{TxIn}}
+\newcommand{\MsgIn}{\type{MsgIn}}
+
+\newcommand{\CEMInit}{\type{CEMInit}}
+\newcommand{\CEMStep}{\type{CEMStep}}
+
+\newcommand{\CEMInputs}{\type{CEMInputs}}
+\newcommand{\CEMStates}{\type{CEMStates}}
+
+\newcommand{\PlutusVII}{\type{PlutusV2}}
+\newcommand{\Credential}{\type{Credential}}
+\newcommand{\Block}{\type{Block}}
+
+\newcommand{\StateMachineState}{\type{StateMachineState}}
+\newcommand{\StateMachineInput}{\type{StateMachineInput}}
+\newcommand{\NFTSMState}{\type{NFTSMState}}
+\newcommand{\NFTSMInput}{\type{NFTSMInput}}
+
+\newcommand{\True}{\type{True}}
+\newcommand{\False}{\type{False}}
+
+\newcommand{\Ix}{\type{Ix}}
+\newcommand{\Slot}{\type{Slot}}
+\newcommand{\PParams}{\type{PParams}}
+\newcommand{\Coin}{\type{Coin}}
+\newcommand{\LState}{\type{LState}}
+\newcommand{\Initialize}{\type{Initialize}}
+\newcommand{\Progress}{\type{Progress}}
+
+\newcommand{\OutputVal}{\type{OutputVal}}
+
+\newcommand{\AssetID}{\type{AssetID}}
+\newcommand{\TokenName}{\type{TokenName}}
+\newcommand{\myThread}{\type{myThread}}
+\newcommand{\pkSigns}{\type{pkSigns}}
+
+\newcommand{\Counters}{\type{Counters}}
+\newcommand{\CounterID}{\type{CounterID}}
+\newcommand{\CS}{\type{CS}}
+\newcommand{\CI}{\type{CI}}
+
+\newcommand{\Env}{\type{Env}}
+\newcommand{\FEnv}{\type{FEnv}}
+\newcommand{\Id}{\type{Id}}
+
+\usepackage{etoolbox}
+\usepackage{tikz-qtree}
+\usepackage{tikz}
+\usetikzlibrary{matrix}
+
+% Names, for consistency
+\usepackage{xspace}
+\newcommand\UTXO{UTxO\xspace}
+\newcommand\EUTXO{EUTxO\xspace}
+\newcommand\ExUTXO{Extended UTxO\xspace}
+\newcommand\EUTXOma{EUTxO$_{\textsc{ma}}$\xspace}
+
+\newcommand{\SELF}{\type{SELF}}
+\newcommand{\TRANS}{\type{TRANS}}
+\newcommand{\POV}{\type{POV}}
+\newcommand{\CEM}{\type{CEM}}
+\newcommand{\Trc}{\type{Trc}}
+\newcommand{\CEMS}{\type{CEMS}}
+\newcommand{\SMUP}{\type{SMUP}}
+\newcommand{\CEMsm}{CEM_{sm}}
+
+\newcommand{\SR}{\type{SR}}
+\newcommand{\MsgRdmr}{\type{MsgRdmr}}
+\newcommand{\send}{\type{send}}
+\newcommand{\receive}{\type{receive}}
+\newcommand{\MSGS}{\type{MSGS}}
+\newcommand{\Msg}{\type{Msg}}
+\newcommand{\msgsTT}{\type{msgsTT}}
+\newcommand{\msgsVal}{\type{msgsVal}}
+\newcommand{\msgTkn}{\type{msgTkn}}
+
+\newcommand{\Memory}{\type{Memory}}
+\newcommand{\Params}{\type{Params}}
+\newcommand{\HState}{\type{HState}}
+\newcommand{\SType}{\type{SType}}
+\newcommand{\HYDRA}{\type{HYDRA}}
+
+\newcommand{\TOGGLE}{\type{TOGGLE}}
+\newcommand{\Toggle}{\type{Toggle}}
+\newcommand{\toggle}{\type{toggle}}
+\newcommand{\Payout}{\type{Payout}}
+\newcommand{\payout}{\type{payout}}
+\newcommand{\myPKs}{\type{myPKs}}
+\newcommand{\toggleTT}{\type{toggleTT}}
+\newcommand{\toggleVal}{\type{toggleVal}}
+\newcommand{\PartialOutput}{\type{PartialOutput}}
+
+\newcommand\initial{\msf{initial}}
+\newcommand\nft{\blacklozenge}
+\newcommand\step{\msf{step}}
+\newcommand\satisfies{\msf{satisfies}}
+\newcommand\checkOutputs{\msf{checkOutputs}}
+\newcommand\txeq{tx^\equiv}
+
+% Account simulations
+\newcommand{\threadTT}{\type{threadTT}}
+\newcommand{\AccID}{\type{AccID}}
+\newcommand{\AccData}{\type{AccData}}
+\newcommand{\Accnts}{\type{Accnts}}
+\newcommand{\OneUpd}{\type{OneUpd}}
+\newcommand{\AccUpd}{\type{AccUpd}}
+\newcommand{\Open}{\type{Open}}
+\newcommand{\Oargs}{\type{Oargs}}
+\newcommand{\Close}{\type{Close}}
+\newcommand{\CArgs}{\type{CArgs}}
+\newcommand{\Deposit}{\type{Deposit}}
+\newcommand{\DArgs}{\type{DArgs}}
+\newcommand{\Withdraw}{\type{Withdraw}}
+\newcommand{\WArgs}{\type{WArgs}}
+\newcommand{\Transfer}{\type{Transfer}}
+\newcommand{\TArgs}{\type{TArgs}}
+\newcommand{\ACCNTS}{\type{ACCNTS}}
+\newcommand{\ACCOP}{\type{ACCOP}}
+\newcommand{\PAYOUT}{\type{PAYOUT}}
+
+% relaxed float placement
+\renewcommand{\topfraction}{.95}
+\renewcommand{\bottomfraction}{.7}
+\renewcommand{\textfraction}{.15}
+\renewcommand{\floatpagefraction}{.66}
+\renewcommand{\dbltopfraction}{.66}
+\renewcommand{\dblfloatpagefraction}{.66}
+\setcounter{topnumber}{9}
+\setcounter{bottomnumber}{9}
+\setcounter{totalnumber}{20}
+\setcounter{dbltopnumber}{9}
+
+\newcommand\bpar[1]{{\vspace{2pt}\noindent\textbf{#1.}}\enspace}
+\newcommand\app{+\!\!\!\!+\ }
+
+\sloppy % for proper justification (no overflows to the right)
+
+\begin{document}
+%
+\title{Message-passing in the Extended UTxO Ledger}
+
+\author{%
+Polina Vinogradova\inst{1}\orcidID{0000-0003-3271-3841}
+\and
+Orestis Melkonian\inst{2}\orcidID{0000-0003-2182-2698}
+% \and
+% Philip Wadler\inst{1,2}%\orcidID{0000-0001-7619-6378}
+}
+
+\institute{
+  Input Output, Canada (IOG),
+  \email{firstname.lastname@iohk.io}
+\and
+Input Output, United Kingdom (IOG),
+\email{firstname.lastname@iohk.io}
+}
+
+\maketitle
+
+\begin{abstract}
+A notable problem faced by developers of smart contracts running
+on an extended UTxO (EUTxO) ledger is \emph{double satisfaction}:
+interacting contracts that make payouts
+may validate with insufficient payments made to some recipients.
+In this work, we formalize the notion of a stateful contract constraint being
+vulnerable to double satisfaction.
+Next, we formalize interaction among scripts and stateful contracts via \emph{message-passing},
+consisting of a specification and an implementation of a stateful distributed message-passing contract,
+together with a proof of the integrity of its implementation.
+Messages specify sender and receiver outputs, as well as the data and assets
+being communicated, which are recorded on the ledger in the form of special NFT tokens
+distributed across UTxO entries that also contain the sent assets.
+We give two applications of our design by considering a message:
+(1) as a record of a successful script computation, akin to memoization,
+and (2) as a mechanism for asynchronous structured contracts communication
+that enables a principled separation of contract communication from its computation.
+Building on this application of message-passing, we present a result stating that
+making payouts from stateful contracts using message-passing is
+not vulnerable to double satisfaction.
+
+\keywords{%
+Blockchain \and
+Ledger \and
+UTxO \and
+EUTxO \and
+Smart contract \and
+Formal verification \and
+Small-step operational semantics \and
+Message-passing \and
+Double satisfaction \and
+Simulation relation
+}
+\end{abstract}
+
+\input{intro}
+
+\section{Background}
+\label{sec:background}
+\input{model}
+\input{structured}
+
+\input{doublesatisfaction}
+
+\input{messages-spec}
+\input{messages-apps}
+
+\input{discussion}
+
+\vspace{.3cm}
+\bpar{Acknowledgments}
+We would like to thank Manuel Chakravarty for providing inspiration for this work,
+by being one of the first proponents of the message-passing idiom for concurrency
+in the \EUTXO model. We would also like to thank Philip Wadler for useful discussions.
+
+% \newpage
+\bibliographystyle{splncs04}
+\bibliography{sources}
+% \newpage
+\appendix
+\input{appendix}
+
+\end{document}

@@ -1,384 +1,195 @@
 
-\section{Message-passing usecases}
+\section{Message-passing use cases}
 \label{sec:usecases}
 
-In this section we give two applications of the message-passing contract.
+In this section we discuss applications of the message-passing structured contract.
 
 \subsection{Memoization}
-\label{sec:partial}
+\label{sec:memo}
 
 There may be strict resource use constraints that apply to executing code on a
 blockchain. It may not be possible for a transaction to run the code of a large contract in its
-entirety. It may be desirable to divide such code into smaller functions, each requiring
-less memory or CPU to run. A script may not trust values pre-computed off-chain,
+entirety. It may be desirable to divide such code into less memory- and CPU-intensive
+functions whose outputs are pre-computed for use by an aggregate function.
+A script may not trust values pre-computed off-chain,
 so a proof that a value was correctly computed on-chain is required.
-The technique we describe in this section for constructing such proofs is
-similar to a specific kind of caching, also called \emph{memoization} \cite{memoization},
+In this section we describe a technique for constructing such proofs using
+the $\MSGS$ contract. It is
+similar to a specific kind of caching called \emph{memoization}~\cite{memoization},
 which is also how we refer to our approach.
 
-Consider a function $\fun{myFunction}~:~\mathsf{MyInType}~\to~ \mathsf{MyOutType}$
-which performs some computation. We define a script $\mathsf{checkMyFunction}$ \ref{fig:checkmf},
-that wraps the computation
-done by $\fun{myFunction}$ into a script that produces a message with
-data $(\var{fIn},~\var{fOut})$, such that $\fun{myFunction}~\var{fIn}~=~\var{fOut})$,
-and mints a message token proving that it is correct :
-
-\begin{figure}[htb]
-  \begin{align*}
-    \applyScript{\mathsf{checkMyFunction}}~(\wcard,~r,~(\var{tx},~\var{i}))~&\leteq~\\
-    &~~~~~\text{\textcolor{gray}{-- If $r$ is a send-message redeemer sending $m$}} \\
-    &~~~~~~\text{\textcolor{gray}{--and message data is an input-output pair}} \\
-    & \fun{if }~ \fun{fromData}~r~\neq~\emptytype~ \wedge ~\fun{fromData}_{IO}~(\fun{msgData}~m) \neq \emptytype,~\\
-    &~~~~~~\text{\textcolor{gray}{-- $m$ is uniquely identified by $i$}} \\
-    &~~~~~~\wedge~\fun{inUTxO}~m~=~\outputref~i \\
-    &~~~~~~\text{\textcolor{gray}{-- $m$ is from this script}} \\
-    &~~~~~~\wedge~ \fun{msgFrom}~m~=~\fun{output}~i \\
-    &~~~~~~\text{\textcolor{gray}{-- no minimum sent value}} \\
-    &~~~~~~\wedge~\fun{msgValue}~m~=~0 \\
-    &~~~~~~\text{\textcolor{gray}{-- message token with message $m$ is minted}} \\
-    &~~~~~~\wedge~\msgTkn~m~\subseteq~\mint~\var{tx} \\
-    &~~~~~~\text{\textcolor{gray}{-- check myFunction computation}} \\
-    &~~~~~~\wedge~\fun{myFunction}~\var{fIn}~=~\var{fOut} \\
-    &~~~~~~\where \\
-    &~~~~~~~~~~~ ~[(\send,~\Msg~m)] ~=~\fun{fromData}~r \\
-    &~~~~~~~~~~~ ~(\var{fIn},~\var{fOut}) ~=~\fun{fromData}_{IO}~(\fun{msgData}~m) \\
-    & \fun{else, } \\
-    &~~~~~~\False
-  \end{align*}
-  \caption{Script checking input-output pairs for $\fun{myFunction}$}
-  \label{fig:checkmf}
-\end{figure}
-
-Note that $\fun{msgTo}$ is not constrained by this contract, so that the generated
-message can be sent to any recipient.
-The following function decodes the message data as an input-output pair, or fails :
-\[ \fun{fromData}_{IO} : \Data \to (\mathsf{MyInType}~\times~ \mathsf{MyOutType})\cup \{\emptytype\} \]
-
-We define a script $\mathsf{useMyFunction}$, Figure \ref{fig:usemf}, that can
-consume a message with the redeemer $(\receive,~\Msg~m)$
-when it is addressed to the output locked by $\mathsf{useMyFunction}$.
-This message serves as a proof that $\fun{myFunction}~(\var{fIn},~\var{fOut})$,
-so, $\mathsf{useMyFunction}$ can do some
+Consider a function $\fun{myFunction} : \mathsf{MyInType} \to \mathsf{MyOutType}$
+which performs some computation. We define a script $\mathsf{checkMyFunction}$
+(Fig.~\ref{fig:checkmf}), which wraps the computation
+done by $\fun{myFunction}$. This script mints a message token with
+data $(\var{fIn},~\var{fOut})$, such that $\fun{myFunction}~\var{fIn}~=~\var{fOut}$,
+and a script $\mathsf{useMyFunction}$ (Fig.~\ref{fig:usemf}) that can
+consume a message with the redeemer $[(\receive,~m)]$
+when $m$ is addressed to an output locked by $\mathsf{useMyFunction}$, and is
+sent by an output locked by $\mathsf{checkMyFunction}$.
+This message serves as a proof that $\fun{myFunction}~\var{fIn} = \var{fOut}$,
+so, $\mathsf{useMyFunction}$ can perform a
 computation $\fun{checkStuff}$ relying on the fact that $\fun{myFunction}~\var{fIn} = \var{fOut}$.
+Note that $\fun{msgTo}$ is not constrained by this contract, so that the generated
+message can be addressed to any recipient.
 
-\begin{figure}[htb]
-  \begin{align*}
-    \applyScript{\mathsf{useMyFunction}}~&~(d,~r,~(\var{tx},~\var{i}))~\leteq~\\
-    &~~~~~\text{\textcolor{gray}{-- If $r$ is a receive-message redeemer sending $m$}} \\
-    &~~~~~\text{\textcolor{gray}{-- and $m$-data from message is an input-output pair}} \\
-    & \fun{if }~\fun{fromData}~r~\neq~\emptytype~ \wedge ~\fun{fromData}_{IO}~(\fun{msgData}~m) \neq \emptytype,~\\
-    &~~~~~\text{\textcolor{gray}{-- $m$ is from the script computing myFunction}} \\
-    &~~~~~\wedge~ \fun{msgFrom}~m~=~\mathsf{checkMyFunction} \\
-    &~~~~~\text{\textcolor{gray}{-- $m$ is sent to this script}} \\
-    &~~~~~\wedge~ \fun{msgTo}~m~=~\fun{output}~i \\
-    &~~~~~\text{\textcolor{gray}{-- message token with message $m$ is burned}} \\
-    &~~~~~\wedge~(-1)~*~(\msgTkn~m)~\subseteq~\mint~\var{tx} \\
-    &~~~~~\text{\textcolor{gray}{-- use myFunction computation output from message to do more stuff}} \\
-    &~~~~~\wedge~\fun{checkStuff}~d~r~~(\var{tx},~\var{i})~(\var{fIn},~\var{fOut}) \\
-    &~~~~~~\where \\
-    &~~~~~~~~~~~ ~[(\receive,~\Msg~m)] ~=~\fun{fromData}~r \\
-    &~~~~~~~~~~~ ~(\var{fIn},~\var{fOut}) ~=~\fun{fromData}_{IO}~(\fun{msgData}~m) \\
-    & \fun{else, } \\
-    &~~~~~\fun{checkOtherStuff}~d~r~~(\var{tx},~\var{i})
-  \end{align*}
-\caption{Script that uses memoized output of $\fun{myFunction}$}
-\label{fig:usemf}
-\end{figure}
-
-We give the result that formalizes the use of message-passing here
-as proof that $\fun{myFunction}~\var{fIn} = \var{fOut}$.
+We give the result that formalizes the use of message-passing
+to prove that $\fun{myFunction}~\var{fIn} = \var{fOut}$.
 
 \paragraph{Lemma (Verified input-output pairs). }
 \label{lem:io-pairs}
-For any $(s,~u,~\var{tx}, u') \in \LEDGER$, with $\pi~u \neq \emptytype$ and
-$(i, ~(\mathsf{useMyFunction}, v, d),~ r) \in \fun{inputs}~\var{tx}$,
+For any $(s,~u,~tx, u') \in \LEDGER$, with $\pi~u \neq \emptytype$ and
+$(i, ~(\mathsf{useMyFunction}, v, d),~ r) \in tx.\fun{inputs}$,
 such that
 \begin{align*}
-  [(\receive,~\Msg~m)] &= \fun{fromData}~r \\
-  (\var{fIn},~\var{fOut}) ~&=~\fun{fromData}_{IO}~(\fun{msgData}~m) \\
-  \fun{msgFrom}~m &= (\mathsf{checkMyFunction}, \wcard, \wcard)
+  [(\receive,~m)] &= r \\
+  (\var{fIn},~\var{fOut}) ~&=~m.\fun{msgData} \\
+  m.\fun{msgFrom} &= (\mathsf{checkMyFunction}, \_, \_)
 \end{align*}
-
+%
 necessarily $\fun{myFunction}~\var{fIn} = \var{fOut}$, and
-$\fun{msgTo}~m = (\mathsf{useMyFunction}, v, d)$.
-
-See \ref{pf:io-pairs} for proof sketch.
-
-% \todopv{properties -  messages are unique, can be exactly one per utxo, all msg tokens
-% are in msg utxos}
+$m.\fun{msgTo} = (\mathsf{useMyFunction}, v, d)$.
+For a proof sketch, see the extended version of the paper.
+Note here that the memoization approach we presented can be viewed as a kind of
+\emph{untrusted oracle}. The computation done to produce the memoized
+input-output pair cannot be falsified, so that no trust is required to make
+use of it.
 
 \subsection{Contracts using message-passing}
 \label{sec:async}
 
-Stateful contract interaction, or communication, in the EUTxO model is usually implemented
-via dependencies \cite{eutxoma}. A (direct) \emph{dependency} of a script $c$ is a constraint requiring that another
+Stateful contract interaction, or communication, in the EUTxO model is implemented
+via dependencies~\cite{eutxoma}. A \emph{dependency} of a script $c$ is a constraint requiring that another
 script $c'$ must be executed within the same transaction, possibly with specific
-arguments. \emph{Message-passing} is implemented via dependencies, and is an alternative
-to the direct dependency approach to implementing interaction and communication
-of other contracts or scripts. It allows the interacting scripts execute
-asynchronously, and to depend
-on the message-passing scripts $\msgsTT$ and $\msgsVal$ rather than
-on each other directly. We say that stateful contracts that require the production or
-consumption of messages to or from scripts implementing the contract
-\emph{use message-passing}, and we formalize this notion in this section.
+arguments. Using the $\MSGS$ contract to implement communication between contracts
+reduces ad-hoc reliance on arbitrary
+script dependencies, and makes contract interaction more principled and
+amenable to formal verification.
 
-Messages serve as intermediate stores of assets whose transfer is authorized
-by the sender, but before they are accepted by the receiver.
-The receiver output script may or may not place additional constraints
-on how the value and data in the message is used.
-Message-passing is a robust way of
-making payouts, which are asset transfers \emph{from} a specific payer \emph{to}
-receiver outputs not included in the structured contract
-state. We give an example to demonstrate this.
+We say that stateful contracts \emph{use message-passing}
+when they require the production or
+consumption of messages to or from scripts implementing the contract.
+We formalize this notion in this section. Note that due to space constraints, we
+omit several interesting results about contracts using message-passing, as well as
+a detailed example of a contract that makes payouts via messages, all of which can be found
+in the extended version of this work.
 
 Message-passing specification is closely integrated with ledger semantics,
 and inspects the scripts, redeemers, and datums of the input transaction.
 Because of this, a message-passing contract must also inspect these
 in order to correctly construct a message. So, a state projection function
 for a contract that uses message-passing includes the UTxO entry relevant
-to the contract state, in full. The contract input must be the complete transaction.
-Below, we sometimes abuse notation for predicates $\fun{P} : A \to \B$,
-and write $a \in \fun{P}$ for $\fun{P}~a$.
+to the contract state, in full. The contract input is the complete transaction.
 
-Suppose that $\fun{F} : \Output \mapsto \B$ is some a filter, and
-$\fun{c} : \UTxO \to \B$ are some constraints on a valid UTxO state. The contract
-denoted by $(\pi_{\fun{F,c}},~\pi_{\Tx},~\STRUC)$ is a structured contract with
+Suppose that $\fun{F} : \Output \mapsto \B$ is a constraint on outputs, and
+$\fun{c} : \UTxO \to \B$ is a constraint on a valid UTxO state. The contract
+denoted by $(\pi_{\fun{Fc}},~\pi_{\Tx},~\STRUC)$ is a structured contract with
 \begin{align*}
-  \State &\leteq \{ i \mapsto o~\in~U ~\mid~i \in \Input,~o \in \fun{F}, U \in \UTxO, \fun{c}~U \} \\
-  \pi_{\fun{F,c}}~ u~&\leteq ~\begin{cases}
-    \{ i \mapsto o ~\in u~\mid ~o \in \fun{F} \} & \text{ if } \fun{c}~u \\
+  \State &\leteq \{ i \mapsto o~\in~u ~\mid ~u \in \UTxO,~\fun{F}~o~ \} \\
+  \pi_{\fun{Fc}}~ u~&\leteq ~\begin{cases}
+    \{ i \mapsto o ~\in u~\mid ~\fun{F}~o \} & \text{ if } \fun{c}~u \\
     \emptytype  & \text{ otherwise }
   \end{cases}~\\
   \pi_{\Tx} &\leteq \fun{id}
 \end{align*}
 
-We can use the technique of
-combining structured contracts \cite{structured}, to construct
+We can combine $\STRUC$ and $\MSGS$ to construct
 the structured contract $\STRUC_{\MSGS}$,
 \begin{align*}
-  \pi_{\State-M}~&\leteq~(\pi_{\fun{F,c}}, \pi_{\Msg}) \\
+  \pi_{\State-M}~u~&\leteq~\begin{cases}
+    (\pi_{\fun{Fc}}~u, \pi_{\Msg}~u) & \text{ if~~ } \pi_{\fun{Fc}}~u~\neq~\emptytype~\neq~ \pi_{\Msg}~u \\
+    \emptytype & \text{ otherwise}
+  \end{cases} \\
   \pi_{\Tx-M}~&\leteq~\fun{id}_{\Tx} \\
-  \STRUC_{\MSGS} &\leteq \{~ (\emptytype, (s, m), \var{tx}, (s', m'))~\mid~
-  (\emptytype, s, \var{tx}, s') \in \STRUC, (\emptytype, m, \var{tx}, m') \in \MSGS~\}
+  \STRUC_{\MSGS} &\leteq \{~ (\emptytype, (s, m), tx, (s', m'))~\mid~
+  (\emptytype, s, tx, s') \in \STRUC, (\emptytype, m, tx, m') \in \MSGS~\}
 \end{align*}
 
 We call this contract \emph{message-augmentation} of $\STRUC$.
-We define the following function that filters messages sent or received by $\STRUC$ :
+We define the following functions that filter messages sent or received by $\STRUC$ :
 \begin{align*}
-  \fun{getFromSTRUCmsgs} &: \powerset{\Msg} \to \powerset{\Msg}  \\
-  \fun{getFromSTRUCmsgs} ~\var{msgs} & \leteq \{~m~\mid~m~\in \var{msgs},~\fun{F}~(\fun{msgFrom}~m)~\} \\
-  \nextdef
-  \fun{getToSTRUCmsgs} &: \powerset{\Msg}   \to \powerset{\Msg} \\
-  \fun{getToSTRUCmsgs} ~\var{msgs} & \leteq \{~m~\mid~m~\in \var{msgs},~\fun{F}~(\fun{msgTo}~m)~\} \\
-\end{align*}
-
-We now state a result that says that, for given a $\fun{F,c}$, all messages to and from
-the contract $(\pi_{\fun{F, c}},~\pi_{\Tx},~\STRUC)$ for a given step are generated
-and consumed only under some appropriate conditions. In particular, messages
-\emph{from} a specific contract can only be produced when a script locking
-an output of this contract "authorizes" the minting of this message by
-successfully validating with a redeemer containing the message(s) being produced.
-Consuming messages \emph{to} a specific contract requires, again, the
-validation of a script locking the recipient output, given a redeemer
-containing these messages.
-This result follows directly from the $\MSGS$ specification and implementation.
-
-\paragraph{Lemma ($\STRUC$ messages generated correctly). }
-\label{lem:msgs-ok}
-For any $(\emptytype, (s, m), \var{tx}, (s' m')) \in \STRUC_{\MSGS}$,
-\begin{align*}
-  &\forall ~\var{msg} \in \fun{getFromSTRUCmsgs}~(m' \setminus m),
-  ((\fun{inUTxO}~\var{msg}) \mapsto (\fun{msgFrom}~\var{msg}) \in s) \\
-  &~~~~~ \wedge ~~  ((\fun{inUTxO}~\var{msg}) \mapsto (\fun{msgFrom}~\var{msg}) \notin s') \\
-  &~~~~~ \wedge ~~\forall~\var{inp} \in \inputs~\var{tx}, (\outputref~\var{inp} = \fun{inUTxO}~\var{msg} \Rightarrow ~ (\send, \var{msg}) \in \fun{fromData}~(\redeemer~\var{inp}))
-  \nextdef
-  &\forall ~\var{msg} \in \fun{getToSTRUCmsgs}~(m \setminus m'),
-  (\wcard \mapsto (\fun{msgTo}~\var{msg}) \in s) \\
-  &~~~~~ \wedge ~~\exists~\var{inp} \in \inputs~\var{tx}, \outputref~\var{inp} = \fun{msgTo}~\var{tx} \wedge (\receive, \var{msg}) \in \fun{fromData}~(\redeemer~\var{inp}))
+  \fun{getFromSTRUCmsgs} ~\var{msgs} & \leteq \{~m~\mid~m~\in \var{msgs},~\fun{F}~(m.\fun{msgFrom})~\} \\
+  \fun{getToSTRUCmsgs} ~\var{msgs} & \leteq \{~m~\mid~m~\in \var{msgs},~\fun{F}~(m.\fun{msgTo})~\}
 \end{align*}
 
 \paragraph{Definition (Uses message-passing). }
 \label{def:usesmp}
 We say that $\STRUC$ \emph{uses message-passing} whenever the set defined by
-\[ \fun{getMSGS}~(\emptytype, (s, m), \var{tx}, (s' m'))~\leteq~\fun{getFromSTRUCmsgs}~(m' \setminus m)
+\[ \fun{getMSGS}~(\emptytype, (s, m), tx, (s' m'))~\leteq~\fun{getFromSTRUCmsgs}~(m' \setminus m)
 \cup \fun{getToSTRUCmsgs}~(m \setminus m')  \]
 
-is non-empty for some $(\emptytype, (s, m), \var{tx}, (s' m')) \in \STRUC_{\MSGS}$. \newline
+is non-empty for some $(\emptytype, (s, m), tx, (s' m')) \in \STRUC_{\MSGS}$. \newline
 
-We define the set of \emph{payouts} in the step $(\emptytype, (s, m), \var{tx}, (s' m')) \in \STRUC_{\MSGS}$ by
-\[\fun{getPayouts}~(\emptytype, (s, m), \var{tx}, (s' m'))~\leteq~\{ \var{msg} \in \fun{getFromSTRUCmsgs}~(m' \setminus m) ~\mid ~\fun{msgValue}~\var{msg} > 0 \wedge
-\neg~(\fun{F}~(~\fun{msgTo}~\var{msg})) ~\} \]
+We define the set of \emph{payouts} in the step $(\emptytype, (s, m), tx, (s' m')) \in \STRUC_{\MSGS}$ by
+\begin{align*}
+  \fun{getPayouts}~(\emptytype, (s, m), tx, (s' m'))~\leteq~\{ \var{msg} \in \fun{getFromSTRUCmsgs}~(m' \setminus m) ~\mid \\ ~~~~\var{msg}.\fun{msgValue} > 0 \wedge
+  \neg~(\fun{F}~(\var{msg}.\fun{msgTo}) ~\}
+\end{align*}
 
-Whenever this set is non-empty for some step in $\STRUC_{\MSGS}$, we say that it
+Whenever this set is necessarily non-empty for some step in $\STRUC_{\MSGS}$, we say that it
 \emph{makes payouts with messages}.
 
-\paragraph{Discussion}
-
+\bpar{Discussion}
 A contract is said to use message-passing whenever there is a step in $\STRUC_{\MSGS}$ that
 requires the production or consumption of a non-empty set of messages to or from $\STRUC$.
-Some computations that $\STRUC$ performs may be contingent on receiving a specific
+Some computation performed by contracts implementing $\STRUC$ may be contingent on receiving a specific
 message. For example, accepting a payment message sent by another contract.
  %The lemma \ref{lem:msgs-ok} states
 
-Contracts that use message-passing share two common features that are both necessary
-and sufficient for a script $c$ implementing the contract to interface with the message-passing contract :
+Contracts that use message-passing share common features that are both necessary
+and sufficient for a script $c$ implementing the contract to be able to
+interface with the message-passing contract :
 (i) the script's redeemer must decode to a list of sent/received messages, and (ii)
-the script must require that the corresponding messages are minted/burned.
-The sent messages must be \emph{from} $c$, and the received messages must be
-addressed \emph{to} $c$, by Lemma \ref{lem:msgs-ok}.
-% Suppose $\STRUC$
-% uses message-passing. Suppose also that
-% $(\emptytype, (s, m), \var{tx}, (s' m')) \in \STRUC_{\MSGS}$, and
-% $\var{msg} \in \fun{getMSGS}~(\emptytype, (s, m), \var{tx}, (s' m'))$. Then for some
-% $(i, ~o,~ r) \in \fun{inputs}~\var{tx}$, with $o \in \fun{F}$, the redeemer $r$
-% must decode to a list of sent and received messages, so $\fun{fromData}~r \neq \emptytype$.
-% Here, $\fun{fromData}$ is the function that decodes a $\Redeemer$ to the specific
-% type $ [(\SR \times \Msg)]$ expected by the script, or fails \ref{fig:msg-to}.
+the script must ensure that the corresponding messages are included in the
+transaction's mint field.
 
-We can refer to the messages sent and received by outputs that make up the state
-of a contract $\STRUC$, i.e. those filtered by $\fun{F}$, as a scripts'
-\emph{communication}. All other checks and state updates are the contract's
-computations. These computations may still include dependencies on scripts implementing
+For a given step $(\emptytype, s, t, s') \in \STRUC$, we refer to the messages sent and received
+by outputs that make up $s$, i.e. those filtered by $\fun{F}$, as a script's
+\emph{communication}. Calculating $s'$ for the given $(s, t)$
+is the $\STRUC$ contract's
+computation. $\STRUC$ may still include arbitrary dependencies on scripts implementing
 contracts other than $\MSGS$. Specifying when a contract has no non-message
-dependencies is important for reasoning about when it is able to progress.
+dependencies is important for determining when it is guaranteed to be able to progress.
 This is, however, the subject of future work.
 
+\section{Messages as payouts}
+\label{sec:msgs-pay}
+
 A \emph{payout} is a message that is from $\STRUC$, but not addressed to $\STRUC$, and
-specifies a sent value greater than zero. When a contract makes payouts with messages,
-it generates at least one payout for some valid step. Note the function that
+specifies a sent value greater than zero. The function that
 returns all the payouts for a given contract, $\fun{getPayouts}$, is a function
-of the $\MSGS$ state only, given that it is applied to a valid step of $\STRUC_{\MSGS}$.
-To demonstrate using message-passing, we give an example of a message-augmented
-contract that makes payouts until it runs out of funds. We focus on a payout
-example because we later present a security result about message payouts.
+of the start and end $\MSGS$ states \emph{only}.
+Consider a transition $(\emptytype, (s, m), tx, (s' m')) \in \STRUC_{\MSGS}$.
+To guarantee that a message-payout $\var{msg}$ is made whenever rule $R \subseteq \STRUC_{\MSGS}$
+applies, $R$ must ensure that (i) $\var{msg} \in \var{m'} \setminus m$,
+(ii) $\fun{msgValue}~\var{msg} ~>~ 0$, and (iii) $\var{msg}$ must be \emph{from} an output
+locked by some script $c$ implementing $\STRUC$.
+The script $c$ implementing this constraint of $\STRUC$ should
+instead include the constraint $\msgTkn~\var{msg} \in \var{tx} . \mint$. For a detailed example
+of making payouts via messages, see the extended version of this work.
+Making payouts in this way has an advantage over the naive approach to payouts.
 
-\paragraph{Message-augmented $\PAYOUT$}
+\bpar{$\MSGS$ payouts and double satisfaction}
+In Section \ref{sec:doublesat} we present a naive approach to payouts. This approach is
+vulnerable to DS, since the constraint requiring a payout to be made is expressed
+as a function the input transaction, rather than the state.
+Naive payout outputs can be produced and consumed by any valid transaction at any time,
+independently of the state update of any contract.
+Without a mechanism to \emph{associate a payout with its sender}, is not possible to
+include naive payouts in a contract's state.
 
-Suppose $\fun{NFT}$ is an NFT thread
-token whose minting policy requires that a specific output reference must be
-spent from the UTxO, and the token must be placed into the output given by
-$(\fun{payout}, \fun{NFT} + \fun{a}, \emptytype)$, for some $\fun{a} > 0$.
-This NFT token serves as a unique identifier of the UTxO entry currently containing the datum and value
-representing part (or all) of the contract state.
-This approach is defined in the thread token
-design pattern in \cite{eutxoma}, and used in \cite{structured}, as well
-as for implementing $\MSGS$.
-We define the filter $\fun{F}$ which returns only the outputs containing
-the NFT specific to the $\PAYOUT$ contract implementation,
-and constraint $\fun{c}$ stating that there is exactly one NFT in the UTxO :
-\begin{align*}
-  \fun{F}~o~ \leteq~\fun{NFT} \subseteq \val~o
-  \nextdef
-  \fun{c}~u~\leteq~\exists!~i\mapsto o \in~u, \fun{NFT} \subseteq \val~o
-\end{align*}
+Intuitively, making payouts via messages provides such a mechanism by ensuring that the
+sender of the payout is recorded in the message token, and that the message token
+has a unique identifier. Formally, since making payouts via messages can be expressed as
+a predicate on a the start and end $\MSGS$ states, rather than on the input transaction,
+constraints on message payouts are not vulnerable to DS for a message-enhanced contract.
+We can express this as follows (see Appendix~\ref{sec:appendix-proofs} for the proof):
 
-The redeemer type for the $\fun{payout}$ script is $[(\SR \times \Msg)]$ (as
-with all message-passing scripts), and
-the datum type is $\{\emptytype\}$, which is never inspected.
-We give the two transition rules of the message-augmented specification $\PAYOUT_{\MSGS})$.
-The first, $\fun{MSGSOnly}$, applies when the $\PAYOUT$ state is not updated,
-and only the message-passing contract is updated. The second, $\fun{PayoutV}$,
-applies when a payout of value $\fun{v} > 0$ is made to the address script
-$\fun{recipient} \neq \fun{payout}$. Only one payout at a time is possible,
-and it must have message index $1$.
-Transitions between distinct states with multiple copies of the NFT (e.g.
-including more than one UTxO) are never allowed.
+\paragraph{Lemma ($\MSGS$-payouts and DS)}
+Suppose $(\pi_{\fun{Fc}},~\pi_{\Tx},~\STRUC)$ is a structured contract,
+and $\STRUC_{\MSGS}$ is its message-enhanced version.
+Let $\fun{C} \supset \STRUC_{\MSGS}$ be a constraint expressible in terms of
+some predicate $\fun{C'}$ on the set of payout messages,
+\[\fun{C}~(\emptytype, (s, m), tx, (s' m')) \leteq \fun{C'}~(\fun{getPayouts}_{\STRUC}~(\emptytype, (s, m), tx, (s', m'))) \]
 
-We note that rather than defining $\PAYOUT$ first, then $\PAYOUT_{\MSGS}$, we
-define the latter directly. The reason for this is that this approach allows
-us to express the requirements on the payout messages as constraints on the
-$\MSGS$ state update, rather than in terms of on the outputs contained in the
-carrying $\var{tx}$. Defining the message-augmentation of any message-passing contract
-makes it possible to constrain the message state update, rather than filtering
-and constraining messages in the inputs and outputs of a transaction.
-This is because the function that
-returns all the payouts for a given contract, $\fun{getPayouts}$, is a function
-of the $\MSGS$ state only.
-
-% In this case, the constraint specifying when a payout must be
-% made, which would be necessary in $\STRUC$,
-% \[(\var{tx}, \var{ix}) \mapsto (\fun{payout}, \fun{NFT} + (\var{a}~-~\fun{v}), \emptytype) \in \fun{mkOuts}~\var{tx} \]
-%
-% is implied by the constraint on the message state update,
-% \begin{align*}
-%   \var{ms} \leteq (i, 1, (\fun{recipient}, \fun{v}, \emptytype), (\fun{payout}, \fun{NFT} + \var{a}, \emptytype), v, \emptytype)  \\~
-%   \var{ms} \in m' ~~\wedge~~ \var{ms} \notin m
-% \end{align*}
-%
-% in the $\STRUC_{\MSGS}$ specification.
-% For this contract, the payouts are computed as follows :
-%
-% \begin{align*}
-%   \fun{getPayouts}~(\emptytype, (\{i \mapsto (\fun{payout}, \fun{NFT} + \var{a}, \emptytype)\}, m), \var{tx}, (s' m')) = \begin{cases}
-%     (i, 1, (\fun{recipient}, \fun{v}, \emptytype), (\fun{payout}, \fun{NFT} + \var{a}, \emptytype), v, \emptytype)
-%     & \text{ if } \exists~\var{inp} \in \inputs~\var{tx}, \outputref~\var{inp} = i   \\
-%     \{\} & \text{ otherwise }
-% \end{cases}
-% \end{align*}
-
-The specification is given by
-
-\begin{equation}
-  \inference[MSGSOnly]
-  { \\
-    \wcard \vdash
-    (m)
-    \trans{msgs}{\var{tx}}
-    (\varUpdate{m'})  &
-  (i, o, \wcard) \notin \inputs~\var{tx}\\
-  }
-  {
-  \begin{array}{l}
-    \\
-  \end{array}
-    \vdash
-    \left(
-    \begin{array}{r}
-      \{i \mapsto o\} \\
-      m
-    \end{array}
-    \right)
-    \trans{PAYOUT-MSGS}{\var{tx}}
-    \left(
-    \begin{array}{r}
-      \{i \mapsto o\} \\
-       \varUpdate{m'}
-    \end{array}
-    \right) \\
-  }
-\end{equation}
-\nextdef
-\begin{equation}
-  \inference[PayoutV]
-  {~\\
-  \var{ms} \leteq (i, 1, (\fun{recipient}, \fun{v}, \emptytype), (\fun{payout}, \fun{NFT} + \var{a}, \emptytype), v, \emptytype)  \\~\\
-  \var{ms} \in m' & \var{ms} \notin m &
-  \fun{v} \leq \var{a} \\~~\\
-  (\var{tx}, \var{ix}) \mapsto (\fun{payout}, \fun{NFT} + (\var{a}~-~\fun{v}), \emptytype) \in \fun{mkOuts}~\var{tx} \\~\\
-  \exists~\var{inp} \in \inputs~\var{tx}, \outputref~\var{inp} = i~\wedge~\redeemer~\fun{inp} = \{(\send, \var{ms})\}
-  \\~\\
-    \wcard \vdash
-    (m)
-    \trans{msgs}{\var{tx}}
-    (\varUpdate{m'}) \\
-  }
-  {
-  \begin{array}{l}
-    \\
-  \end{array}
-    \vdash
-    \left(
-    \begin{array}{r}
-      \{i \mapsto (\fun{payout}, \fun{NFT} + \var{a}, \emptytype)\} \\
-      m
-    \end{array}
-    \right)
-    \trans{PAYOUT-MSGS}{\var{tx}}
-    \varUpdate{\left(
-    \begin{array}{r}
-      \{(\var{tx}, \var{ix}) \mapsto (\fun{payout}, \fun{NFT} + (\var{a}~-~\fun{v}), \emptytype)\} \\
-       m'
-    \end{array}
-    \right) } \\
-  }
-\end{equation}
+Then, the contract $\STRUC_{\MSGS}$ is not vulnerable to DS with respect to $\fun{C}$.

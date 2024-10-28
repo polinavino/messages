@@ -1,0 +1,84 @@
+SUBMISSION: 4
+TITLE: Message-passing and the Double Satisfaction Problem in the EUTxO Ledger Model
+
+
+----------------------- REVIEW 1 ---------------------
+SUBMISSION: 4
+TITLE: Message-passing and the Double Satisfaction Problem in the EUTxO Ledger Model
+AUTHORS: Polina Vinogradova
+
+----------- Overall evaluation -----------
+SCORE: 1 (weak accept)
+----- TEXT:
+Summary:
+
+In this paper, the authors introduce a message-passing specification for UTxO ledgers that (1) uses NFTs to store validated information such as the sender of the message and the intended receiver and (2) specifies a protocol for the distributed storage of a set of these messages in a manner that allows this set to be updated arbitrarily. This specification has two (clear) key benefits: the first is the presence of authentication (of the sender, receiver and the data being sent), and the second is flexible asynchronous communication. Based on these benefits, the authors demonstrate how their specification can be used for memoization (proving the outputs of priorly computed values, when the code of a large contract cannot be executed within a single transaction) and to enable asynchronous communication between dependent contracts (e.g. to support payouts). The authors close by detailing the double satisfaction problem (the movement of fewer assets than is required, owing to two
+ contracts being constructed around the same single output), and show how their specification mitigates this issue for payouts.
+
+Comments:
+
++ Overall an interesting approach that appears to address key issues in the contract message-passing space in a viable way.
+
++ Although parts of the paper are quite dense, the use of small-step operational semantics to detail the specification is natural and makes the content clearer than it might have otherwise been.
+
++ I do not have the necessary mathematical background to assess the validity of the proofs given (e.g. in Section 6), but they do appear (at a high level) to be sound, and are, at least, thorough.
+
+- I wonder about the 'extra assumptions' at the end of Section 4, which appear (at least to me) to be quite important, and pivotal in the specification delivering its stated benefits. I wonder if this section might have been longer and included more examples of models/ledgers that offer the protections stated.
+
+- I was curious about the (conceptual) focus on TokenName name, particularly when describing where the content of a message is held (Section 4). I am quite possibly assuming a different NFT structure, and/or missing a conceptual element of what is being proposed, but would it not be more natural to store messages within the content of the NFT itself? And might this even, under some ledger implementations, be problematic in respect of expected data types and sizes? The authors themselves recognise that TokenName is, in some instances, considered to just be a standard character string.
+
+- A stated benefit of the new message-passing specification is the arbitrary reordering of message-passing transactions, however it was not immediately clear to me what the practical utility of this is. This may have been stated in some of the slightly denser parts of the text (e.g. the second use case (Section 5.2)), and indeed may only be a supporting feature in the wider message-passing specification, but perhaps -- given its prominence in the text as a stated benefit -- a small self-contained example of why arbitrary reordering is useful might have been a good addition to the paper.
+----------- Best paper -----------
+SELECTION: no
+
+
+
+----------------------- REVIEW 2 ---------------------
+SUBMISSION: 4
+TITLE: Message-passing and the Double Satisfaction Problem in the EUTxO Ledger Model
+AUTHORS: Polina Vinogradova
+
+----------- Overall evaluation -----------
+SCORE: -2 (reject)
+----- TEXT:
+The manuscript in question includes the author's name, which is a violation of the conference's double-blind review process. This process is a foundational aspect of ensuring unbiased and fair evaluation of submissions, as it prevents reviewers from being influenced by the identity of authors. The inclusion of the author's name compromises the integrity of the review process, as it disrupts the anonymity that is crucial for impartial assessment.
+
+Due to this breach of conference guidelines, I recommend the rejection of this manuscript.
+----------- Best paper -----------
+SELECTION: no
+
+
+
+----------------------- REVIEW 3 ---------------------
+SUBMISSION: 4
+TITLE: Message-passing and the Double Satisfaction Problem in the EUTxO Ledger Model
+AUTHORS: Polina Vinogradova
+
+----------- Overall evaluation -----------
+SCORE: 1 (weak accept)
+----- TEXT:
+This article is about a mechanism for using a distributed ledger to facilitate making transactional changes (such as the change of ownership) to stateful non-fungible digital assets, using stateful smart contracts within the EUTxO ledger model.  The author provides a formal model for consuming (referencing) the prior state of a token and producing output that can be consumed by future updates, subject to encumbrances that exist inside the stateful contract.
+
+The author shows how it is possible to formally ensure the integrity and correct satisfaction of rules that facilitate updates to assets within a system.
+
+The importance of this work is that it opens the door to formal analysis of systems that use a DLT to facilitate decentralised updates to stateful general-purpose assets that exist independently of a shared database of tokens or balances.  The author should consider this work in the context of other approaches that aim to formalise the processing of updates to stateful NFTs, including those that do not rely upon ERC-20 style smart contracts [1].
+
+A major problem with this article is that it is hard to read.
+
+Most importantly: It is written quite nearly backwards.  For example, the double satisfaction problem that forms the basis of the motivation for the article is not formally introduced until page 12 (section 6), even though it is invoked on page 2.  The motivation and context should precede what the author does with that context, so that users can understand what is being built.
+
+Next, I am not sure how generalisable it is.  Is this formalisation heavily dependent upon the semantics of a particular EUTxO system, e.g. Cardano?  That could be a problem, and the authors should show that this is not so.
+
+Also, many terms are used without providing a definition, including EUTxO, slot number, multi-asset, partial, and so on.  While it might be reasonable to assume that readers have a basic knowledge of what a smart contract is, the jargon must be de-mystified before it is used, and the rules of the system that underpin this model should be spelled out explicitly.
+
+There are also some undefined terms used in the formal model, such as getORefs and mkOuts on page 4.  The author also seems to lean on the appendix a bit more than should be done; the appendix is for elaboration and reading it should not be necessary to understand the article.  The notation leaves something to be desired.  For example, the use of the blackboard-bold 'P' and 'B', and also '++' might not be common knowledge.  The notation should be explained much more clearly and should leave less to the imagination and the assumption that readers are familiar with common conventions.
+
+There are also some small bugs, such as not specifying m != m' as a LHS condition in 'Replay protection'.  There may be more bugs; please review carefully.
+
+And there are some copy-editing issues: citations such as \ref and \cite do not constitute nouns and should not be used as such.  In the case of citations, please explain what the citation is in the text rather than sending users off to the library to try to figure out what the paper is about.
+
+This article must be made much easier to follow, especially for those who are not as familiar with the particular systems in mind.
+
+[1] e.g. K Coward and D Toliver, "Simple Rigs Hold Fast".  https://arxiv.org/abs/2208.13617
+----------- Best paper -----------
+SELECTION: no

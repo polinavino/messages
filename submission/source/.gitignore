@@ -1,0 +1,8 @@
+paper.pdf
+*.aux
+*.log
+*.out
+*.blg
+*.bbl
+*~
+*.aux

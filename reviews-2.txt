@@ -1,0 +1,79 @@
+NOTE about Submission (emailed at a later date)
+
+"May I suggest that you check compliance with the lncs style?
+(see other papers).
+For now, no problem, but for the final version to be included in the post proc
+you will need to use the proper format (usually there is a bit of flexibility
+about page numbers… Let’s see after the workshop)."
+
+
+
+REVIEWS :
+
+
+SUBMISSION: 8
+TITLE: Message-passing and the Double Satisfaction Problem in the Extended UTxO Ledger Model
+
+
+----------------------- REVIEW 1 ---------------------
+SUBMISSION: 8
+TITLE: Message-passing and the Double Satisfaction Problem in the Extended UTxO Ledger Model
+AUTHORS: Polina Vinogradova
+
+----------- Overall evaluation -----------
+SCORE: 2 (accept)
+----- TEXT:
+This paper is an updated version of a previous submission with a similar title.  The paper is greatly improved (and the new title is better, too).
+
+Substantially all of my concerns have been addressed.  The paper now has been restructured to have a more logical flow, the jargon has been greatly reduced, and the issues with grammar and formatting of the references have been resolved.  The contextualisation is also better, and I note the new proof of a lemma (in Section 7) that was mentioned without proof last time.
+
+I'm not sure that the Appendix should precede the References, but this is for Springer-Nature editors to handle.
+
+Overall I am satisfied.  However there are still a few issues that should be fixed.  These are probably typos but have technical significance, so please fix them:
+
+The underscore notation is used in the second paragraph of Section 2.1 but not explained until the third paragraph of Section 2.2.  A conjunction operator is missing from Equation (2) on Page 5, and not all equations throughout the article have numbers (they should).  The first paragraph of Section 5 (on Page 7) ends abruptly without punctuation.  It needs a colon, since it introduces a list, and 'see Figure 8' should be set off with parentheses as '(see Figure 8):'.  Later in that section, the fifth paragraph on Page 8 ends with the sentence 'It uses the assumption in Section 5'.  But this is Section 5; I think what is meant is really 'It uses the following assumption.'
+----------- Best paper -----------
+SELECTION: no
+
+
+
+----------------------- REVIEW 2 ---------------------
+SUBMISSION: 8
+TITLE: Message-passing and the Double Satisfaction Problem in the Extended UTxO Ledger Model
+AUTHORS: Polina Vinogradova
+
+----------- Overall evaluation -----------
+SCORE: 1 (weak accept)
+----- TEXT:
+This paper focuses on the double satisfaction problem (DSP), which is faced by contract-enabled UTxO ledgers. It provides a formalisation of the DSP and proposes a message-passing structured contract to solve it. Moreover, the new approach is applied to two practical use cases (memoization and asynchronous communication of data and assets between structured contracts).
+
+The paper is well organised, nicely written and scientifically accurate. The topic it deals with is of certain interest for the community and fits well with the workshop. The proposed solution appears to be sound (even though I was not able to check all the details) and a promising approach for the DSP.
+
+* Minor comments *
+
+- Page 1: a payout to an specific address
+- Page 2: properties related to the integrity their behaviour.
+----------- Best paper -----------
+SELECTION: no
+
+
+
+----------------------- REVIEW 3 ---------------------
+SUBMISSION: 8
+TITLE: Message-passing and the Double Satisfaction Problem in the Extended UTxO Ledger Model
+AUTHORS: Polina Vinogradova
+
+----------- Overall evaluation -----------
+SCORE: 2 (accept)
+----- TEXT:
+The paper titled "Message-passing and the Double Satisfaction Problem in the Extended UTxO Ledger Model" formalizes the concept of "double satisfaction" and delves into the interactions between scripts and stateful contracts through message passing within the Extended Unspent Transaction Output (EUTxO) based blockchain framework. This exploration presents a contribution to the community highlighting the paper's relevance and utility for both the targeted audience and the workshop's thematic focus.
+
+The novelty of these formalizations stems from addressing the previously overlooked aspect of the double satisfaction problems. Moreover, the contributions are robust, reinforcing the claims made through application of formal methods to elucidate and validate the entirety of their process with precision
+
+Despite the theoretical density of the topic, the authors excel in maintaining a self-contained exposition. Their approach to detailing structured contract formalism and the "double satisfaction" problem's formalization is commendable. The paper is further enhanced by thoughtful discussions and extensive examples, making it well-structured and comparatively accessible for readers, facilitating a deeper understanding of a complex subject.
+
+Moreover, the authors excel in delineating the application of their proposal in highlighting the future prospects of their research. As a minor critique, it seems to me that the authors do not engage in discussing their approach's limitations, which could enrich the evaluation. Including this in the camera-ready version would add valuable insight.
+
+Finally, the discussion concerning related work is adequately addressed, providing a context for the study's contributions within the current state of the art
+----------- Best paper -----------
+SELECTION: no

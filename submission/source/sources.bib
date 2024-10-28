@@ -1,0 +1,353 @@
+% Distributed computing / concurrency
+@article{liveness,
+title = {Defining liveness},
+journal = {Information Processing Letters},
+volume = {21},
+number = {4},
+pages = {181-185},
+year = {1985},
+issn = {0020-0190},
+doi = {https://doi.org/10.1016/0020-0190(85)90056-0},
+url = {https://www.sciencedirect.com/science/article/pii/0020019085900560},
+author = {Bowen Alpern and Fred B. Schneider},
+keywords = {Liveness, absolute liveness, uniform liveness, safety, property, topology, concurrency, semantics},
+abstract = {A formal definition for liveness properties is proposed. It is argued that this definition captures the intuition that liveness properties stipulate that ‘something good’ eventually happens during execution. A topological characterization of safety and liveness is given. Every property is shown to be the intersection of a safety property and a liveness property.}
+}
+@book{distributed,
+  author = {Andrews, G.R.},
+  biburl = {https://www.bibsonomy.org/bibtex/2e06e2d148e60f17ba111244f0bbb67ac/mokukkon},
+  publisher = {Addison-Wesley},
+  timestamp = {2008-11-22T10:38:47.000+0100},
+  title = {{Foundations of Multithreaded, Parallel, and Distributed Programming}},
+  year = 1999
+}
+@book{design,
+  author = {Coulouris, George and Dollimore, Jean and Kindberg, Tim},
+  biburl = {https://www.bibsonomy.org/bibtex/20f7b3759d6d803835d09a29a9bb9397f/schmidt2},
+  isbn = {0321263545},
+  publisher = {Addison-Wesley Longman, Amsterdam},
+  timestamp = {2011-07-19T11:29:32.000+0200},
+  title = {Distributed Systems: Concepts and Design (International Computer Science)},
+  year = 2005
+}
+% Operational semantics
+@article{plotkin,
+author = {Plotkin, Gordon},
+year = {2004},
+month = {07},
+pages = {17-139},
+title = {A Structural Approach to Operational Semantics},
+volume = {60-61},
+journal = {J. Log. Algebr. Program.},
+doi = {10.1016/j.jlap.2004.05.001}
+}
+% Memoization
+@book{memoization,
+  title={Functional Programming},
+  author={Field, A.J. and Harrison, P.G.},
+  isbn={9780201192490},
+  lccn={88001265},
+  series={International computer science series},
+  url={https://books.google.ca/books?id=nYtQAAAAMAAJ},
+  year={1988},
+  publisher={Addison-Wesley}
+}
+% π-calculus
+@book{picalc,
+  author = {Milner, R.},
+  biburl = {https://www.bibsonomy.org/bibtex/2afe9554fd6b33eaff56305d885d56458/wvdaalst},
+  publisher = {Cambridge University Press, Cambridge, UK},
+  timestamp = {2012-11-22T19:21:58.000+0100},
+  title = {{Communicating and Mobile Systems: The Pi-Calculus}},
+  year = 1999
+}
+% EUTxO
+@inproceedings{eutxo,
+  author       = {Manuel M. T. Chakravarty and
+                  James Chapman and
+                  Kenneth MacKenzie and
+                  Orestis Melkonian and
+                  Michael {Peyton Jones} and
+                  Philip Wadler},
+  editor       = {Matthew Bernhard and
+                  Andrea Bracciali and
+                  L. Jean Camp and
+                  Shin'ichiro Matsuo and
+                  Alana Maurushat and
+                  Peter B. R{\o}nne and
+                  Massimiliano Sala},
+  title        = {The Extended {UTXO} Model},
+  booktitle    = {Financial Cryptography and Data Security - {FC} 2020 International
+                  Workshops, AsiaUSEC, CoDeFi, VOTING, and WTSC, Kota Kinabalu, Malaysia,
+                  February 14, 2020, Revised Selected Papers},
+  series       = {Lecture Notes in Computer Science},
+  volume       = {12063},
+  pages        = {525--539},
+
+  publisher    = {Springer},
+  year         = {2020},
+  url          = {https://doi.org/10.1007/978-3-030-54455-3\_37},
+  doi          = {10.1007/978-3-030-54455-3\_37},
+  timestamp    = {Sun, 09 Aug 2020 16:13:47 +0200},
+  biburl       = {https://dblp.org/rec/conf/fc/Chakravarty0MMJ20.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{eutxoma,
+  author       = {Manuel M. T. Chakravarty and
+                  James Chapman and
+                  Kenneth MacKenzie and
+                  Orestis Melkonian and
+                  Jann M{\"{u}}ller and
+                  Michael Peyton Jones and
+                  Polina Vinogradova and
+                  Philip Wadler},
+  editor       = {Tiziana Margaria and
+                  Bernhard Steffen},
+  title        = {Native Custom Tokens in the Extended {UTXO} Model},
+  booktitle    = {Leveraging Applications of Formal Methods, Verification and Validation:
+                  Applications - 9th International Symposium on Leveraging Applications
+                  of Formal Methods, ISoLA 2020, Rhodes, Greece, October 20-30, 2020,
+                  Proceedings, Part {III}},
+  series       = {Lecture Notes in Computer Science},
+  volume       = {12478},
+  pages        = {89--111},
+  publisher    = {Springer},
+  year         = {2020},
+  url          = {https://doi.org/10.1007/978-3-030-61467-6\_7},
+  doi          = {10.1007/978-3-030-61467-6\_7},
+  timestamp    = {Wed, 28 Oct 2020 12:00:09 +0100},
+  biburl       = {https://dblp.org/rec/conf/isola/Chakravarty0MMM20.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{utxoma,
+  author       = {Manuel M. T. Chakravarty and
+                  James Chapman and
+                  Kenneth MacKenzie and
+                  Orestis Melkonian and
+                  Jann M{\"{u}}ller and
+                  Michael Peyton Jones and
+                  Polina Vinogradova and
+                  Philip Wadler and
+                  Joachim Zahnentferner},
+  editor       = {Tiziana Margaria and
+                  Bernhard Steffen},
+  title        = {{UTXO}$_{\textsf{ma}}$: {UTXO} with Multi-asset Support},
+  booktitle    = {Leveraging Applications of Formal Methods, Verification and Validation:
+                  Applications - 9th International Symposium on Leveraging Applications
+                  of Formal Methods, ISoLA 2020, Rhodes, Greece, October 20-30, 2020,
+                  Proceedings, Part {III}},
+  series       = {Lecture Notes in Computer Science},
+  volume       = {12478},
+  pages        = {112--130},
+  publisher    = {Springer},
+  year         = {2020},
+  url          = {https://doi.org/10.1007/978-3-030-61467-6\_8},
+  doi          = {10.1007/978-3-030-61467-6\_8},
+  timestamp    = {Wed, 28 Oct 2020 12:00:09 +0100},
+  biburl       = {https://dblp.org/rec/conf/isola/Chakravarty0MMM20a.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+% EUTxO: structured contracts
+
+@article{structured,
+  title = {Structured Contracts in the {EUTxO} Ledger Model},
+  author = {
+  {Polina Vinogradova and
+  Orestis Melkonian and
+  Philip Wadler and
+  Manuel Chakravarty and
+  Jacco Krijnen and
+  Michael Peyton Jones and
+  James Chapman and
+  Tudor Ferariu
+  }},
+  booktitle= {5th International Workshop on Formal Methods for Blockchains},
+  series={OpenAccess Series in Informatics},
+  year={2024},
+  url = {https://fmbc.gitlab.io/2024/files/FMBC2024.pdf}
+}
+
+% Cardano
+@misc{shelley,
+    title={A Formal Specification of the {Cardano} Ledger},
+    author = { Jared Corduan and Matthias G\"udemann and Polina Vinogradova },
+    year = {2019},
+    howpublished={\url{https://github.com/input-output-hk/cardano-ledger/releases/latest/download/shelley-ledger.pdf}}
+}
+@misc{alonzo,
+    title={{A Formal Specification of the {Cardano} Ledger integrating {Plutus Core}}},
+    author = { Andre Knispel and Polina Vinogradova },
+    year = {2021},
+    howpublished={\url{https://github.com/input-output-hk/cardano-ledger/releases/latest/download/alonzo-ledger.pdf}}
+}
+@misc{agdaspec,
+  author = {
+Andre Knispel and
+Orestis Melkonian and
+James Chapman and
+Alasdair Hill and
+Joosep Jääger and
+William DeMeo and
+Ulf Norell
+},
+  title = {Formal specification of the {Cardano} blockchain ledger, mechanized in {Agda}},
+  year = {2024},
+  note = {under submission},
+  howpublished = {\url{https://omelkonian.github.io/data/publications/cardano-ledger.pdf}}
+}
+% UTxO
+@article{blockalg,
+      title={Algebras of {UTxO} blockchains},
+      volume={31},
+      DOI={10.1017/S0960129521000438},
+      number={9},
+      journal={Mathematical Structures in Computer Science},
+      publisher={Cambridge University Press},
+      author={Gabbay, Murdoch J.},
+      year={2021},
+      pages={1034–1089}
+}
+@inproceedings{nester,
+  author       = {Chad Nester},
+  editor       = {Emmanuelle Anceaume and
+                  Christophe Bisi{\`{e}}re and
+                  Matthieu Bouvard and
+                  Quentin Bramas and
+                  Catherine Casamatta},
+  title        = {A Foundation for Ledger Structures},
+  booktitle    = {2nd International Conference on Blockchain Economics, Security and
+                  Protocols, Tokenomics 2020, October 26-27, 2020, Toulouse, France},
+  series       = {OASIcs},
+  volume       = {82},
+  pages        = {7:1--7:13},
+  publisher    = {Schloss Dagstuhl - Leibniz-Zentrum f{\"{u}}r Informatik},
+  year         = {2020},
+  url          = {https://doi.org/10.4230/OASIcs.Tokenomics.2020.7},
+  doi          = {10.4230/OASICS.TOKENOMICS.2020.7},
+  timestamp    = {Wed, 03 Feb 2021 16:48:10 +0100},
+  biburl       = {https://dblp.org/rec/conf/tokenomics/Nester20.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+% Bitcoin
+@misc{bitcoin,
+title={{Bitcoin: A Peer-to-Peer Electronic Cash System}},
+author={S. Nakamoto},
+month={October},
+year={2008},
+howpublished={\url{https://bitcoin.org/en/bitcoin-paper}}
+}
+@InProceedings{bitcoinformal,
+  author =	{Rupi\'{c}, Kristijan and Ro\v{z}i\'{c}, Lovro and Derek, Ante},
+  title =	{{Mechanized Formal Model of Bitcoin’s Blockchain Validation Procedures}},
+  booktitle =	{2nd Workshop on Formal Methods for Blockchains (FMBC 2020)},
+  pages =	{7:1--7:14},
+  series =	{Open Access Series in Informatics (OASIcs)},
+  ISBN =	{978-3-95977-169-6},
+  ISSN =	{2190-6807},
+  year =	{2020},
+  volume =	{84},
+  editor =	{Bernardo, Bruno and Marmsoler, Diego},
+  publisher =	{Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik},
+  address =	{Dagstuhl, Germany},
+  URL =		{https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.FMBC.2020.7},
+  doi =		{10.4230/OASIcs.FMBC.2020.7},
+}
+@inproceedings{bitml,
+  title={{BitML}: a calculus for {Bitcoin} smart contracts},
+  author={Bartoletti, Massimo and Zunino, Roberto},
+  booktitle={Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security},
+  pages={83--100},
+  year={2018},
+  organization={ACM}
+}
+% Ethereum
+@misc{ethereum,
+title={{Ethereum: A Next-Generation Smart Contract and Decentralized Application Platform.}},
+author = { Vitalik Buterin },
+year = {2014},
+howpublished={\url{https://ethereum.org/en/whitepaper/}}
+}
+@misc{erc20,
+title={{ERC-20 TOKEN STANDARD}},
+author = {{Ethereum Team}},
+year = {2023},
+howpublished={\url{https://ethereum.org/en/developers/docs/standards/tokens/erc-20}}
+}
+% Algorand
+@misc{algorand-docs,
+title={{Algorand Developer Documentation}},
+author = {{Algorand Team}},
+year = {2021},
+howpublished={\url{https://developer.algorand.org/docs/}}
+}
+@misc{algorandformal,
+      title={A formal model of {Algorand} smart contracts},
+      author={Massimo Bartoletti and Andrea Bracciali and Cristian Lepore and Alceste Scalas and Roberto Zunino},
+      year={2021},
+      eprint={2009.12140},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR}
+}
+% Zilliqa
+@article{scilla,
+  title={Safer smart contract programming with {Scilla}},
+  author={Sergey, Ilya and Nagaraj, Vaivaswatha and Johannsen, Jacob and Kumar, Amrit and Trunov, Anton and Hao, Ken Chan Guan},
+  journal={Proceedings of the ACM on Programming Languages},
+  volume={3},
+  number={OOPSLA},
+  pages={185},
+  year={2019},
+  publisher={ACM}
+}
+@misc{zilliqa,
+title={{The ZILLIQA Technical Whitepaper}},
+author = {The ZILLIQA Team},
+year = {2017},
+howpublished={\url{https://docs.zilliqa.com/whitepaper.pdf}}
+}
+% Other blockchains
+@misc{ergo,
+  title={{Ergo: A Resilient Platform For ContractualMoney}},
+  author={{Ergo Team}},
+  year={2019},
+  howpublished={\url{https://whitepaper.io/document/753/ergo-1-whitepaper}}
+}
+@misc{tezos,
+  title={Tezos—a self-amending crypto-ledger (white paper)},
+  author={Goodman, L.M.},
+  year={2014},
+  howpublished={\url{https://tezos.com/whitepaper.pdf}}
+}
+% Crypto
+@misc{rigs,
+      title={Simple Rigs Hold Fast},
+      author={Kris Coward and D. R. Toliver},
+      year={2022},
+      eprint={2208.13617},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC}
+}
+% Blockchain formal methods
+@InProceedings{leveragingfm,
+author="S{\'a}nchez, C{\'e}sar
+and Schneider, Gerardo
+and Leucker, Martin",
+editor="Margaria, Tiziana
+and Steffen, Bernhard",
+title="Reliable Smart Contracts: State-of-the-Art, Applications, Challenges and Future Directions",
+booktitle="Leveraging Applications of Formal Methods, Verification and Validation. Industrial Practice",
+year="2018",
+publisher="Springer International Publishing",
+address="Cham",
+pages="275--279",
+isbn="978-3-030-03427-6"
+}
+% Agda
+@inproceedings{agda,
+  title={Dependently typed programming in {Agda}},
+  author={Norell, Ulf},
+  booktitle={International School on Advanced Functional Programming},
+  pages={230--266},
+  year={2008},
+  organization={Springer}
+}

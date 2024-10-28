@@ -1,0 +1,132 @@
+\section{Proofs}
+\label{sec:appendix-proofs}
+
+\paragraph{Proof of Lemma ($\MSGS$-payouts and DS). }
+Suppose that $(\pi_{\fun{F,c}},~\pi_{\Tx},~\STRUC')$ is another (more permissive) structured contract,
+with $\STRUC_{\MSGS} \subseteq \STRUC'_{\MSGS}$, and $\fun{s}~\STRUC_{\MSGS} = \fun{s}~\STRUC'_{\MSGS}$.
+For any $(\emptytype, (s, m), tx, (s', m')) \in \STRUC'_{\MSGS}$, by definition,
+\begin{align*}
+  &\fun{getPayouts}_{\STRUC'}~(\emptytype, (s, m), tx, (s', m')) = \\
+  &~~~~ \{~ms~\in~m' \setminus m~\mid~\fun{F}~(ms.\fun{msgFrom}) ~\wedge~ms.\fun{msgValue} > 0 \wedge
+  \neg~(\fun{F}~(ms.\fun{msgTo}))~\}
+\end{align*}
+
+which depends only on $F$ (which is the same for $\STRUC$ and $\STRUC'$), and $m' \setminus m$.
+Now, by the assumed preconditions on $\STRUC'$, for any $(\emptytype, (s, m), tx, (s', m')) \in \STRUC'_{\MSGS}$,
+we can find $(\emptytype, (s, m), tx', (s', m')) \in \STRUC_{\MSGS} \subseteq \STRUC'_{\MSGS}$.
+Then,
+\begin{align*}
+  \fun{C}~(\emptytype, (s, m), tx, (s' m'))~&=~\fun{C'}~(\fun{getPayouts}_{\STRUC'}~(\emptytype, (s, m), tx, (s', m'))) \\
+  &=~\fun{C'}~(\fun{getPayouts}_{\STRUC}~(\emptytype, (s, m), tx', (s', m'))) \\
+  &=~\fun{C}~(\emptytype, (s, m), tx', (s' m'))
+\end{align*}
+
+Therefore, any transition in $\STRUC'_{\MSGS}$ must also satisfy $\fun{C}$.
+We get that $\STRUC'_{\MSGS} \cap \fun{C} = \STRUC'_{\MSGS}$, meaning
+that $\STRUC_{\MSGS}$ is not vulnerable to DS with respect to such a $\fun{C}$.
+
+\section{Pseudocode}
+\label{sec:appendix-pseudocode}
+
+\begin{figure}
+  \begin{align*}
+    \fun{msgOutsOK}& : \UTxO \to \B \\
+    \fun{msgOutsOK}&~utxo \leteq~\\
+    &~~~~~\forall~(i\mapsto o) \in utxo,
+    \{~\msgsTT \mapsto \{ m \mapsto q \}\} \subseteq o.\val \Rightarrow\\
+    &~~~~~~~~~~~~~~(q = 1) ~~\\
+    &~~~~~~~~\wedge~~(m \neq \emptytype)~\wedge~(m.\fun{inUTxO} \mapsto \_ \notin utxo) ~~ \\
+    &~~~~~~~~\wedge~~\applyMPScript{\msgsTT}~(\emptytype,~(i.\txrefid,~\msgsTT)) \\
+    &~~~~~~~~\wedge~~\forall (i'\mapsto o') \in utxo, i\neq i',~\{~\msgsTT \mapsto \{ m \mapsto \_ \}\} \notin o'.\val \\
+    &\wedge~\forall ~(tx, ix) \mapsto o~\in~utxo,~\forall ~i\in~tx.\inputs, \\
+    &~~~~~~~~~~~~~~~~\applyScript{i.\fun{output}.\fun{validator}}~(i.\fun{output}.\datum,~i.\redeemer,~(tx,~i))~~ \\
+    &~~~~~~~~~~\wedge~~(ix \mapsto o)\in~tx.\outputs
+    \nextdef
+    \SR &\leteq \{\send, \receive\} \\
+    & \text{\emph{Tag specifying whether message is being sent or received}}
+    \nextdef
+    \fun{getMsgRef}& : \Msg \to (\OutputRef,~\Ix) \\
+    \fun{getMsgRef}& ~\var{msg} \leteq (\var{msg}.\fun{inUTxO},~\var{msg}.\fun{msgIx}) \\
+    & \text{\emph{Returns unique message identifier}}
+  \end{align*}
+\caption{Projections and auxiliary $\MSGS$ functions}
+\label{fig:msgs-aux}
+\end{figure}
+%
+\begin{figure}
+  \begin{align*}
+    & \msgsTT \leteq \msgsTT'~\msgsVal
+    \nextdef
+    &\applyScript{\msgsVal}~(\_,~\_,~(tx,~i))~\leteq \\
+    &~~~~~\forall~\var{msg} \in~\{~m~\mid~\msgsTT'~(i.\fun{output}.\validator)~ \mapsto ~\{~m \mapsto 1 \} \} \subseteq ~i.\fun{output}.\val~\}, \\
+    &~~~~~ \{~\msgsTT'~(i.\fun{output}.\validator)~ \mapsto ~\{ \var{msg} \mapsto -1 \} \} ~\subseteq~tx.\mint
+  \end{align*}
+\caption{Minting policy and validator for UTxO containing message tokens}
+\label{fig:msgs-codeV}
+\end{figure}
+%
+\begin{figure}
+  \begin{align*}
+    & \msgsTT' : \Script \to \Script \\
+    &\applyMPScript{\msgsTT'~mv}~(\_,~(tx,~pid))~\leteq \\
+    &~~~~~[~\fun{getMsgRef}~ m \mid (\_,\ m) \leftarrow \var{newOuts}~]~~\#~~
+          [~\fun{getMsgRef}~ m \mid (\_,\ m) \leftarrow \var{usedInputs}~] \\
+    &~~~~~\wedge~~\forall~(o,~\var{msg})~\in~\var{newOuts},~ \\
+    &~~~~~~~~~~~~~~~~(\var{msg},~(\var{msg}.\fun{inUTxO}, \var{msg}.\fun{msgFrom}, \_))~\in~\var{sndMsgs} \\
+    &~~~~~~~~~~\wedge~\{~t~ \subseteq~o.\val~\mid~\dom~t~=~\{pid\}~\} = \msgTkn~\var{msg} \\
+    &~~~~~~~~~~\wedge~o.\validator~=~mv~\wedge~o.\val~\geq~\var{msg}.\fun{msgValue} \\
+    &~~~~~\wedge~~\forall~(i,~\var{msg})~\in~\var{usedInputs},\
+    (\var{msg},~(\_, \var{msg}.\fun{msgTo}, \_))~\in~\var{rcvMsgs}\\
+    &~~~~~\wedge~~\Sigma_{(\_,\var{msg})~\in~\var{newOuts}}~\msgTkn~\var{msg} ~~+~~
+    \Sigma_{(\_, \var{msg})~\in~\var{usedInputs}}~(-1) ~*~ (\msgTkn~\var{msg}) ~~=~~\\
+    &~~~~~~~~~~~\{pid \mapsto tkns~\in~tx.\mint~\} \\
+    &~~~~~\where \\
+    &~~~~~~~~~\msgTkn~\var{msg}~\leteq \{~pid ~\mapsto~ \{\var{msg} \mapsto 1\}~\} \\
+    &~~~~~~~~~\var{sndMsgs}~~~\leteq [~ (\var{msg},~i)~\mid~i\leftarrow~tx.\inputs,
+    ~(sr,~\var{msg})~ \leftarrow~ i.\redeemer,~sr=\send~] \\
+    &~~~~~~~~~\var{rcvMsgs}~~~~\leteq [~ (\var{msg},~i)~\mid~i\leftarrow~tx.\inputs,
+    ~(sr,~\var{msg})~\leftarrow~i.\redeemer,~sr=\receive~] \\
+    &~~~~~~~~~\var{newOuts}~~~\leteq \{~(o,~\var{msg})~\mid~o~\in~tx.\outputs,~
+    \msgTkn~\var{msg}~\subseteq~o.\val~\} \\
+    &~~~~~~~~~\var{usedInputs} \leteq \{~ (i,~\var{msg})~\mid~
+    i~ \in~ tx.\inputs~tx,~\msgTkn~\var{msg}~\subseteq~i.\fun{output}.\val ~\} \\
+  \end{align*}
+\caption{Minting policy constructor for message tokens}
+\label{fig:msgs-codeTT}
+\end{figure}
+
+\begin{figure}[htb]
+\begin{subfigure}{.45\textwidth}
+  \begin{align*}
+    &\applyScript{\mathsf{checkMyFunction}}~(\_,~r,~(tx,~i))~\leteq~\\
+    &~~~~~~~m.\fun{inUTxO}~=~i.\outputref \\
+    &~~\wedge~m.\fun{msgFrom}~=~i.\fun{output} \\
+    &~~\wedge~m.\fun{msgValue}~=~0 \\
+    &~~\wedge~\msgTkn~m~\subseteq~tx.\mint \\
+    &~~\wedge~\fun{myFunction}~\var{fIn}~=~\var{fOut} \\
+    &~~\where \\
+    &~~~~[(\send,~m)] ~=~r \\
+    &~~~~(\var{fIn},~\var{fOut}) ~~=~m.\fun{msgData} \\
+  \end{align*}
+  \caption{Script minting message token.}
+  \label{fig:checkmf}
+\end{subfigure}
+\hfill
+\begin{subfigure}{.45\textwidth}
+  \begin{align*}
+    &\applyScript{\mathsf{useMyFunction}}~(d,~r,~(tx,~i))~\leteq~\\
+    &~~~~~(~~~~m.\fun{msgFrom}~=~(\mathsf{checkMyFunction}, \_, \_)\\
+    &~~~~\wedge~~ m.\fun{msgTo}~=~i.\fun{output} \\
+    &~~~~\wedge~(-1)~*~(\msgTkn~m)~\subseteq~tx.\mint \\
+    &~~~~\wedge~\fun{checkStuff}~d~r~~(tx,~i)~(\var{fIn},~\var{fOut})~~) \\
+    &~~\vee~\fun{checkOtherStuff}~d~r~~(tx,~i)\\
+    &~~\where \\
+    &~~~~~~[(\receive,~~m)] ~=~r \\
+    &~~~~~~(\var{fIn},~\var{fOut})~~~~~~~=~m.\fun{msgData} \\
+  \end{align*}
+\caption{Script using the memoized output.}
+\label{fig:usemf}
+\end{subfigure}
+\caption{Scripts for memoizing the output of $\fun{myFunction}$.}
+\label{fig:memo}
+\end{figure}

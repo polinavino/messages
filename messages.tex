@@ -1,28 +1,15 @@
-% This is samplepaper.tex, a sample chapter demonstrating the
-% LLNCS macro package for Springer Computer Science proceedings;
-% Version 2.21 of 2022/01/12
-%
 \documentclass[runningheads]{llncs}
-%
 \usepackage[T1]{fontenc}
-% T1 fonts will be used to generate the final print and online PDFs,
-% so please use T1 fonts in your manuscript whenever possible.
-% Other font encondings may result in incorrect characters.
-%
 \usepackage{graphicx}
-% Used for displaying a sample figure. If possible, figure files should
-% be included in EPS format.
-%
-% If you use the hyperref package, please uncomment the following two lines
-% to display URLs in blue roman font according to Springer's eBook style:
-%\usepackage{color}
-%\renewcommand\UrlFont{\color{blue}\rmfamily}
-% correct bad hyphenation here
+
+% URLs
+\usepackage[unicode=true,pdftex,pdfa,colorlinks=true]{hyperref}
+\usepackage{xcolor}
+\usepackage{color}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+
 \hyphenation{}
-
-%\usepackage{natbib}
 \usepackage{url}
-
 
 % *** MATHS PACKAGES ***
 %
@@ -32,7 +19,7 @@
 \usepackage{stmaryrd}
 %\usepackage{amsthm}
 
-\usepackage[margin=2.5cm]{geometry}
+% \usepackage[margin=2.5cm]{geometry}
 \usepackage{iohk}
 \usepackage{microtype}
 \usepackage{mathpazo} % nice fonts
@@ -44,8 +31,6 @@
 \usepackage{stmaryrd}
 \usepackage{extarrows}
 \usepackage{slashed}
-\usepackage[unicode=true,pdftex,pdfa,colorlinks=true]{hyperref}
-\usepackage{xcolor}
 \usepackage[capitalise,noabbrev,nameinlink]{cleveref}
 \usepackage{float}
 
@@ -57,9 +42,8 @@
 \usepackage{caption}
 
 \usepackage{subfiles}
-\usepackage{geometry}
+% \usepackage{geometry}
 \usepackage{listings}
- \usepackage{xcolor}
 \usepackage{verbatim}
 \usepackage{listings}% http://ctan.org/pkg/listings
 \lstset{
@@ -71,26 +55,6 @@
 
 % inference rules
 \usepackage{semantic}
-
-\usepackage{todonotes}
-
-%
-\newcommand{\todochak}[1]{\todo[inline,color=purple!40,author=chak]{#1}}
-\newcommand{\todompj}[1]{\todo[inline,color=yellow!40,author=Michael]{#1}}
-\newcommand{\todokwxm}[1]{\todo[inline,color=blue!20,author=kwxm]{#1}}
-\newcommand{\todopv}[1]{\todo[inline,color=purple!40,author=polina]{#1}}
-
-\newcommand{\red}[1]{\textcolor{red}{#1}}
-\newcommand{\redfootnote}[1]{\red{\footnote{\red{#1}}}}
-\newcommand{\blue}[1]{\textcolor{blue}{#1}}
-\newcommand{\bluefootnote}[1]{\blue{\footnote{\blue{#1}}}}
-
-%% A version of ^{\prime} for use in text mode
-\makeatletter
-\DeclareTextCommand{\textprime}{\encodingdefault}{%
-  \mbox{$\m@th'\kern-\scriptspace$}%
-}
-\makeatother
 
 \newcommand{\code}{\texttt}
 \renewcommand{\i}{\textit}  % Just to speed up typing: replace these in the final version
@@ -128,9 +92,6 @@
 \newcommand{\ctx}{\ensuremath{\s{Context}}}
 \newcommand{\vlctx}{\ensuremath{\s{ValidatorContext}}}
 \newcommand{\mpsctx}{\ensuremath{\s{PolicyContext}}}
-\newcommand{\toData}{\ensuremath{\s{toData}}}
-\newcommand{\toTxData}{\ensuremath{\s{toTxData}}}
-\newcommand{\fromData}{\msf{fromData}}
 
 \newcommand{\emptymap}{\ensuremath{\{\}}}
 \newcommand{\emptytype}{\star}
@@ -147,8 +108,6 @@
 \newcommand{\applyMPScript}[1]{\ensuremath{\llbracket#1\rrbracket}}
 
 \newcommand{\unionoverrideMinus}{\ensuremath{\mathbin{\cup_{-}}}}
-% wildcard parameter
-\newcommand{\wcard}[0]{\underline{\phantom{a}}}
 
 % Macros for eutxo things.
 \newcommand{\tx}{\fun{tx}}
@@ -192,14 +151,15 @@
 \newcommand{\SimplInput}{\type{SimplInput}}
 \newcommand{\AccMsgs}{\type{AccMsgs}}
 \newcommand{\Context}{\type{Context}}
+\newcommand{\TxInput}{\type{TxInput}}
 
 \newcommand{\validator}{\fun{validator}}
 \newcommand{\redeemer}{\fun{redeemer}}
 \newcommand{\datum}{\fun{datum}}
 \newcommand{\datumHash}{\fun{datumHash}}
 \newcommand{\datumWits}{\fun{datumWitnesses}}
-\newcommand{\Data}{\ensuremath{\s{Data}}}
-\newcommand{\Input}{\ensuremath{\s{Input}}}
+\newcommand{\Data}{\type{Data}}
+\newcommand{\Input}{\type{Input}}
 \newcommand{\Output}{\type{Output}}
 \newcommand{\OutputRef}{\fun{OutputRef}}
 \newcommand{\Signature}{\ensuremath{\s{Signature}}}
@@ -231,7 +191,7 @@
 
 \newcommand{\Quantity}{\ensuremath{\s{Quantity}}}
 \newcommand{\Asset}{\ensuremath{\s{Asset}}}
-\newcommand{\Policy}{\ensuremath{\s{PolicyID}}}
+\newcommand{\Policy}{\ensuremath{\s{Policy}}}
 \newcommand{\Quantities}{\ensuremath{\s{Quantities}}}
 \newcommand{\nativeCur}{\ensuremath{\mathrm{nativeC}}}
 \newcommand{\nativeTok}{\ensuremath{\mathrm{nativeT}}}
@@ -347,21 +307,12 @@
 \usepackage{tikz}
 \usetikzlibrary{matrix}
 
-% For anonymisation
-\newtoggle{anonymous}
-\toggletrue{anonymous}
-\iftoggle{anonymous}{
-  \newcommand{\Cardano}{CHAIN}
-  \newcommand{\Plutus}{LANG}
-}{
-  \newcommand{\Cardano}{Cardano}
-  \newcommand{\Plutus}{Plutus Core}
-}
-
 % Names, for consistency
-\newcommand{\UTXO}{UTxO}
-\newcommand{\EUTXO}{E\UTXO{}}
-\newcommand{\ExUTXO}{Extended \UTXO{}}
+\usepackage{xspace}
+\newcommand\UTXO{UTxO\xspace}
+\newcommand\EUTXO{EUTxO\xspace}
+\newcommand\ExUTXO{Extended UTxO\xspace}
+\newcommand\EUTXOma{EUTxO$_{\textsc{ma}}$\xspace}
 
 \newcommand{\SELF}{\type{SELF}}
 \newcommand{\TRANS}{\type{TRANS}}
@@ -397,9 +348,6 @@
 \newcommand{\toggleTT}{\type{toggleTT}}
 \newcommand{\toggleVal}{\type{toggleVal}}
 \newcommand{\PartialOutput}{\type{PartialOutput}}
-
-\newcommand{\UTXOma}{\UTXO$_{\textrm{ma}}$}
-\newcommand{\EUTXOma}{\EUTXO$_{\textrm{ma}}$}
 
 \newcommand\initial{\msf{initial}}
 \newcommand\nft{\blacklozenge}
@@ -441,192 +389,93 @@
 \setcounter{totalnumber}{20}
 \setcounter{dbltopnumber}{9}
 
-\newcommand\CStep[1]{\ensuremath{
- #1 \xrightarrow{\hspace{5pt} i \hspace{5pt}} (#1' , \txeq)
-%%\textsf{step}\, #1\, i \equiv \textsf{just}\, #1'
-}}
+\newcommand\bpar[1]{{\vspace{2pt}\noindent\textbf{#1.}}\enspace}
+\newcommand\app{+\!\!\!\!+\ }
 
-\newcommand{\pp}{\nolinebreak\hspace{+0.3em}{\tiny\bf +}\nolinebreak\hspace{-.10em}{\tiny\bf +}\nolinebreak\hspace{+0.3em}\nolinebreak}
-
+\sloppy % for proper justification (no overflows to the right)
 
 \begin{document}
 %
-\title{Message-passing and the Double Satisfaction Problem in the EUTxO Ledger Model \thanks{This work was supported
-by Input Output (iohk.io) through their funding of the Edinburgh Blockchain Technology Lab.}}
-%
-%\titlerunning{Abbreviated paper title}
-% If the paper title is too long for the running head, you can set
-% an abbreviated paper title here
-%
+\title{Message-passing in the Extended UTxO Ledger}
 
-\author{Polina  Vinogradova\inst{1}\orcidID{0000-0003-3271-3841} }
+\author{%
+Polina Vinogradova\inst{1}\orcidID{0000-0003-3271-3841}
+\and
+Orestis Melkonian\inst{2}\orcidID{0000-0003-2182-2698}
 % \and
-% Manuel Chakravarty\inst{1}\orcidID{0000-1111-2222-3333} \and %}{IOG} {manuel.chakravarty@iohk.io}{}{}
-% Philip Wadler\inst{1,2}\orcidID{0000-1111-2222-3333} \and
-% James	Chapman\inst{1}\orcidID{0000-1111-2222-3333} \and %}{IOG} {james.chapman@iohk.io}{}{}
-% Tudor	Ferariu\inst{1,2}\orcidID{0000-1111-2222-3333} \and %}{University of Edinburgh, UK} {s1408714@sms.ed.ac.uk}{}{}
-% Michael Peyton Jones\inst{1}\orcidID{0000-1111-2222-3333} \and %}{IOG} {michael.peyton-jones@iohk.io}{}{}
-% Jacco	Krijnen\inst{1,3}\orcidID{0000-1111-2222-3333} \and %}{Utrecht University, Netherlands} {j.o.g.krijnen@uu.nl}{}{}
-% Orestis	Melkonian\inst{1,2}\orcidID{0000-1111-2222-3333} } %}{IOG \& University of Edinburgh, UK} {orestis.melkonian@ed.ac.uk}{}{}
-%
-\authorrunning{ P. Vinogradova } % et al.}
-% \title{Designing EUTxO smart contracts as communicating state machines: the case of simulating accounts}
-%
-% \titlerunning{Designing EUTxO smart contracts as communicating state machines} %TODO optional, please use if title is longer than one line
-%
-
-% First names are abbreviated in the running head.
-% If there are more than two authors, 'et al.' is used.
-%
-\institute{
-  IOG,
-  \email{firstname.lastname@iohk.io}
-  % \and
-  % University of Edinburgh, UK
-  % \email{orestis.melkonian@ed.ac.uk, s1408714@sms.ed.ac.uk, wadler@inf.ed.ac.uk}
-  % \and
-  % Utrecht University, Netherlands,
-  % \email{j.o.g.krijnen@uu.nl}
+% Philip Wadler\inst{1,2}%\orcidID{0000-0001-7619-6378}
 }
-% \email{lncs@springer.com}\\
-% \url{http://www.springer.com/gp/computer-science/lncs} \and
-% ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
-% \email{\{abc,lncs\}@uni-heidelberg.de}}
-%
-\maketitle              % typeset the header of the contribution
-%
-% An EUTxO ledger is a smart contract-enabled UTxO ledger with native
-% multi-asset support \cite{eutxoma}. Unlike account-based ledgers, an EUTxO ledger
-% does not have built-in support for message-passing.
 
-% Like account-based messages, our
-% design validates the sender (receiver) scripts of a message at the time of
-% production (reps. consumption).
+\institute{
+  Input Output, Canada (IOG),
+  \email{firstname.lastname@iohk.io}
+\and
+Input Output, United Kingdom (IOG),
+\email{firstname.lastname@iohk.io}
+}
+
+\maketitle
 
 \begin{abstract}
-  We formalize communication via message-passing among scripts and stateful contracts in
-  the extended UTxO model. Our formalization is made up of a specification and an
-  implementation of a message-passing
-  stateful smart contract using the structured contracts framework.
-  Messages are recorded on the ledger in the form of special NFT tokens, distributed one
-  per UTxO entry. This entry also contains the assets the message is sending.
-  We formalize the notion of sender and receiver outputs for messages.
-  A message is sent (produced) and received (consumed)
-  asynchronously, in separate transactions, with the possibility of multiple messages
-  between multiple outputs to be produced and consumed within a single transaction.
+A notable problem faced by developers of smart contracts running
+on an extended UTxO (EUTxO) ledger is \emph{double satisfaction}:
+interacting contracts that make payouts
+may validate with insufficient payments made to some recipients.
+In this work, we formalize the notion of a stateful contract constraint being
+vulnerable to double satisfaction.
+Next, we formalize interaction among scripts and stateful contracts via \emph{message-passing},
+consisting of a specification and an implementation of a stateful distributed message-passing contract,
+together with a proof of the integrity of its implementation.
+Messages specify sender and receiver outputs, as well as the data and assets
+being communicated, which are recorded on the ledger in the form of special NFT tokens
+distributed across UTxO entries that also contain the sent assets.
+We give two applications of our design by considering a message:
+(1) as a record of a successful script computation, akin to memoization,
+and (2) as a mechanism for asynchronous structured contracts communication
+that enables a principled separation of contract communication from its computation.
+Building on this application of message-passing, we present a result stating that
+making payouts from stateful contracts using message-passing is
+not vulnerable to double satisfaction.
 
-  We give two applications of our
-  design. The first is using a message as a record of a successful script computation,
-  similar to memoization.
-  The second application is as an mechanism for asynchronous communication within a
-  structured contract, as
-  well as externally, such as in the case of making payouts to an address, separating
-  contract communication from computation.
-  We also formalize the well-known double satisfaction problem for the EUTxO
-  ledger, which has not been done before. We then show how message-passing
-  can solve the double satisfaction problem for payouts.
-
-\keywords{blockchain  \and ledger \and smart contract \and formal verification \and
-specification \and transition system \and UTxO \and message-passing}
+\keywords{%
+Blockchain \and
+Ledger \and
+UTxO \and
+EUTxO \and
+Smart contract \and
+Formal verification \and
+Small-step operational semantics \and
+Message-passing \and
+Double satisfaction \and
+Simulation relation
+}
 \end{abstract}
 
-%such as Ethereum \cite{ethereum}, Tezos \cite{tezos}, and Zilliqa \cite{zilliqa}
+\input{intro}
 
-\input{intro.tex}
-\input{model.tex}
-\input{structured.tex}
-\input{messages-spec.tex}
-\input{messages-apps.tex}
-\input{doublesatisfaction.tex}
-\input{discussion.tex}
-\appendix
-\input{appendix.tex}
-%
-%
-%
-% \section{First Section}
-% \subsection{A Subsection Sample}
-% Please note that the first paragraph of a section or subsection is
-% not indented. The first paragraph that follows a table, figure,
-% equation etc. does not need an indent, either.
-%
-% Subsequent paragraphs, however, are indented.
-%
-% \subsubsection{Sample Heading (Third Level)} Only two levels of
-% headings should be numbered. Lower level headings remain unnumbered;
-% they are formatted as run-in headings.
-%
-% \paragraph{Sample Heading (Fourth Level)}
-% The contribution should contain no more than four levels of
-% headings. Table~\ref{tab1} gives a summary of all heading levels.
-%
-% \begin{table}
-% \caption{Table captions should be placed above the
-% tables.}\label{tab1}
-% \begin{tabular}{|l|l|l|}
-% \hline
-% Heading level &  Example & Font size and style\\
-% \hline
-% Title (centered) &  {\Large\bfseries Lecture Notes} & 14 point, bold\\
-% 1st-level heading &  {\large\bfseries 1 Introduction} & 12 point, bold\\
-% 2nd-level heading & {\bfseries 2.1 Printing Area} & 10 point, bold\\
-% 3rd-level heading & {\bfseries Run-in Heading in Bold.} Text follows & 10 point, bold\\
-% 4th-level heading & {\itshape Lowest Level Heading.} Text follows & 10 point, italic\\
-% \hline
-% \end{tabular}
-% \end{table}
-%
-%
-% \noindent Displayed equations are centered and set on a separate
-% line.
-% \begin{equation}
-% x + y = z
-% \end{equation}
-% Please try to avoid rasterized images for line-art diagrams and
-% schemas. Whenever possible, use vector graphics instead (see
-% Fig.~\ref{fig1}).
-%
-% \begin{figure}
-% \includegraphics[width=\textwidth]{fig1.eps}
-% \caption{A figure caption is always placed below the illustration.
-% Please note that short captions are centered, while long ones are
-% justified by the macro package automatically.} \label{fig1}
-% \end{figure}
-%
-% \begin{theorem}
-% This is a sample theorem. The run-in heading is set in bold, while
-% the following text appears in italics. Definitions, lemmas,
-% propositions, and corollaries are styled the same way.
-% \end{theorem}
-%
-% the environments 'definition', 'lemma', 'proposition', 'corollary',
-% 'remark', and 'example' are defined in the LLNCS documentclass as well.
-%
-% \begin{proof}
-% Proofs, examples, and remarks have the initial word in italics,
-% while the following text appears in normal font.
-% \end{proof}
-% For citations of references, we prefer the use of square brackets
-% and consecutive numbers. Citations using labels or the author/year
-% convention are also acceptable. The following bibliography provides
-% a sample reference list with entries for journal
-% articles~\cite{ref_article1}, an LNCS chapter~\cite{ref_lncs1}, a
-% book~\cite{ref_book1}, proceedings without editors~\cite{ref_proc1},
-% and a homepage~\cite{ref_url1}. Multiple citations are grouped
-% \cite{ref_article1,ref_lncs1,ref_book1},
-% \cite{ref_article1,ref_book1,ref_proc1,ref_url1}.
+\section{Background}
+\label{sec:background}
+\input{model}
+\input{structured}
 
-% \subsubsection{Acknowledgements} Please place your acknowledgments at
-% the end of the paper, preceded by an unnumbered run-in heading (i.e.
-% 3rd-level heading).
+\input{doublesatisfaction}
 
-%
-% ---- Bibliography ----
-%
-% BibTeX users should specify bibliography style 'splncs04'.
-% References will then be sorted and formatted in the correct style.
-%
+\input{messages-spec}
+\input{messages-apps}
+
+\input{discussion}
+
+\vspace{.3cm}
+\bpar{Acknowledgments}
+We would like to thank Manuel Chakravarty for providing inspiration for this work,
+by being one of the first proponents of the message-passing idiom for concurrency
+in the \EUTXO model. We would also like to thank Philip Wadler for useful discussions.
+
+% \newpage
 \bibliographystyle{splncs04}
-\bibliography{msgs-bib}
+\bibliography{sources}
+% \newpage
+\appendix
+\input{appendix}
 
 \end{document}

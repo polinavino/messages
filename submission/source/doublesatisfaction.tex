@@ -1,0 +1,160 @@
+\section{The problem of double satisfaction}
+\label{sec:doublesat}
+
+In the EUTxO model, scripts place constraints on the transactions executing them.
+\emph{Multiple scripts} may place the \emph{same constraint} on the data
+of a given transaction. The issue with certain undesirable instances of this situation
+is called the \emph{double satisfaction problem} (DSP).
+The DSP has been discussed in Plutus documentation,\footnote{%
+\url{https://plutus.readthedocs.io/en/latest/reference/writing-scripts/common-weaknesses/double-satisfaction.html}
+} and in the context of contract audits,\footnote{%
+\url{https://medium.com/@vacuumlabs_auditing/cardano-vulnerabilities-1-double-satisfaction-219f1bc9665e}
+}\footnote{%
+\url{https://github.com/tweag/tweag-audit-reports/blob/main/Marlowe-2023-03.pdf}
+}
+but has not yet been formally analyzed.
+
+The DSP applies to scripts and structured contracts
+that require transactions to make payouts, so it is frequently
+encountered in EUTxO script programming. A \emph{naive} payout is a constraint of the
+form "the transaction must include an output containing value $v$, with address $a$".
+When two structured contract implementations both place such a constraint on a transaction,
+it may be satisfied by a single transaction output $(a, v, \_)$, resulting in
+insufficient payment made to $a$. Note here that we use
+the notation $\_$ to represent a term whose value is not
+relevant to the computation in which it appears.
+
+To formalize this kind of vulnerability, let us assume that all systems discussed
+in this section are deterministic (i.e. have exactly one end state for each
+pair of input and start state),
+and define the following function, which returns all pairs of states in all valid transitions
+of a given structured contract $\STRUC$ :
+\[ \fun{s}~\STRUC = \{~ (s, s')~\mid~\exists~i,~(\emptytype, s, i, s') \in \STRUC~\} \]
+
+\paragraph{Definition (transition constraint). }
+A \emph{constraint} of a transition system $\STRUC$ is a subset
+$\fun{C} \subseteq \emptytypeT \times \State \times \Input \times \State$
+such that $\STRUC \subseteq \fun{C}$.
+
+\paragraph{Definition (double satisfaction). }
+\label{def:ds}
+A structured contract $(\pi, \pi_{\Tx}, \STRUC)$ is \emph{vulnerable to double satisfaction}
+with respect to a constraint $\fun{C}$
+whenever there exists another contract $(\pi, \pi_{\Tx}, \STRUC')$, with $\STRUC \subseteq \STRUC'$
+and $\fun{s}~\STRUC = \fun{s}~\STRUC'$,
+such that $\STRUC' \cap \fun{C} \subsetneq \STRUC'$.
+
+\paragraph{Example ($\TOGGLE$ with extra constraint). }
+\label{ex:toggle}
+Consider a $(\pi, \pi_{\Tx}, \TOGGLE)$ contract, with $\State \leteq \B$ (i.e. Boolean),
+and $\Input \leteq (\toggle \cup \{\emptytype\}) \times \Interval{\Tick}$. \newline
+
+
+\begin{minipage}{.45\textwidth}
+  \begin{equation*}
+    \inference[\textsc{NoOp}]
+    { \\
+    }
+    {
+    \begin{array}{l}
+      \\
+    \end{array}
+      \vdash
+      \left(
+      \begin{array}{r}
+        x
+      \end{array}
+      \right)
+      \trans{TOGGLE}{(\emptytype, \_)}
+      \left(
+      \begin{array}{r}
+        x
+      \end{array}
+      \right) \\
+    }
+  \end{equation*}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \begin{equation*}
+    \label{eq:j}
+    \inference[\textsc{Toggle}]
+    {~\\
+    5 \leq j < k \leq 9 \\~\\
+    }
+    {
+    \begin{array}{l}
+      \\
+    \end{array}
+      \vdash
+      \left(
+      \begin{array}{r}
+        x
+      \end{array}
+      \right)
+      \trans{Toggle}{(toggle, [j, k])}
+      \varUpdate{\left(
+      \begin{array}{r}
+        \neg~x
+      \end{array}
+      \right) } \\
+    } \\
+  \end{equation*}
+\end{minipage}
+
+We define a contract $\STRUC'$ by removing $5 \leq j < k \leq 9$ from rule \textsc{Toggle},
+assume it has the same projections $\pi, \pi_{\Tx}$ as $\TOGGLE$,
+and define the constraint
+\[ \fun{C} (\emptytype, \_, (t, [j,k]), \_) \leteq (t = \toggle) \Rightarrow (5 \leq j < k \leq 9) \]
+
+The contracts $\STRUC'$ and $\STRUC$ transition between the same states:
+$\fun{s}~\STRUC = \fun{s}~\STRUC' = {x \mapsto x,\ x \mapsto ~\neg~x}$.
+Note that $\STRUC = \STRUC' \cap \fun{C} \subsetneq \STRUC'$, hence
+$\STRUC$ is vulnerable to DS with respect to $\fun{C}$.
+
+\bpar{Discussion}
+Vulnerability to the DSP comes from the lack of association of some property of
+transaction data with a \emph{specific structured
+contract} (or script implementing it) that requires this property to hold.
+Our DS definition formalizes the association between a transaction property and a
+contract by defining a property to be associated with a contract only in the case
+when the a property can be expressed as a predicate on the contract state update. Thus,
+any property not expressible as a property of a contract state update is vulnerable
+to DS.
+
+This defines a broad class of constraints
+that are vulnerable to DS, but for which this vulnerability may not necessarily be problematic.
+The preceeding example demonstrates an unproblematic constraint, $\fun{C}$, which only requires
+that a toggle action happens at a particular time interval. It is possible that multiple
+contracts require that some other action be performed in that same time interval
+simultaneously.
+
+The onus is on the structured contract author to determine for which constraints placed on the
+transaction by the contract double satisfaction vulnerability is a problem.
+Then, changes must be made to the contract to ensure that the vulnerability is
+removed. A general approach to mitigating arbitrary instances of DSP vulnerability
+is outside the scope of this work, however,
+in Section~\ref{sec:msgs-pay}, we propose a solution to the DSP for payouts.
+A similar approach can be taken for DSP vulnerability for pay-ins.
+It is possible to define classes of contracts that are never vulnerable to DS.
+See the extended version of this work for a proof of the following lemma:
+
+\paragraph{Lemma (DS-free contracts). }
+
+A deterministic structured contract $(\pi, \pi_{\Tx}, \STRUC)$
+is not vulnerable to double satisfaction with respect to any
+constraint whenever for any $(s, i)$, there exists
+an $s'$ such that $(\emptytype, s, i, s') \in \STRUC$. \newline
+
+\bpar{DSP mitigation}
+An existing heuristic for addressing the DSP
+is to include a constraint in the implementing script(s)
+that forces them to fail if \emph{any other scripts} are being run by the transaction.
+This effectively mitigates negative consequences of potential vulnerabilities
+of the given contract's constraints to the DSP. This is likely not a practical solution in many
+cases, however, as it is too restrictive.
+We note that, like the above example, this constraint is not on the
+contract state update, but rather,
+on the transaction. This means that it is itself vulnerable to DS. However,
+vulnerability of this constraint to DS will likely not be deemed to be a problem
+by script authors, as the purpose of introducing it is to mitigate the negative consequences of
+other constraints' vulnerabilities.
